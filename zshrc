@@ -49,6 +49,7 @@ alias trans='rlwrap trans' # to use history in tranlation shell
 alias jupyter='jupyter notebook ~/Dokumente/Uni/angewandteStatistik'
 export VISUAL='vim'
 nextApts #show all next Apts in the next 24 hours
+export BROWSER=linkopen
 # play the youtube search list
 function mm() {
     mpv ytdl://ytsearch10:"$@"
