@@ -1,0 +1,5 @@
+set hintchars=hjklasdfgyuiopqwertnmzxcvb
+set! browser.startup.page=3
+set gui=none
+ignorekeys add -except b,t,H http://localhost:8888/notebooks*
+colorscheme solarized_dark
