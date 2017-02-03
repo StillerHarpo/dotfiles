@@ -56,7 +56,7 @@ main = xmonad
      ([ ((0, 0x1008ff13),  spawn "volumeplus")
      , ((0, 0x1008ff11),  spawn "volumeminus")
      , ((0, 0x1008ff12),  spawn "mute")
-     , ((mod4Mask, 0x63), spawn "clock")
+     , ((mod4Mask, 0x63), spawn "~/scripts/clock")
 --     , ((mod4Mask, xK_a), composeAll [viewEmptyWorkspace, switchWorkspace])
      , ((mod4Mask, xK_a), viewEmptyWorkspace )
      , ((mod4Mask, xK_s), goToNotify ) 
