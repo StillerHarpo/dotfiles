@@ -1,0 +1,12 @@
+map j j<C-e>
+map k k<C-y>
+set norelativenumber
+set t_ve=
+set guicursor+=a:blinkon0
+map q :q!<ENTER>
+set nospell
+" save last position
+if has("autocmd")
+  au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+endif
+
