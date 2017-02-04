@@ -54,3 +54,6 @@ export BROWSER=linkopen
 function mm() {
     mpv ytdl://ytsearch10:"$@"
 }
+function mma() {
+    mpv --no-video ytdl://ytsearch10:"$@"
+}
