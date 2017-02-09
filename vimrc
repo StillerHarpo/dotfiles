@@ -14,16 +14,14 @@ Plugin 'VundleVim/Vundle.vim'
 " Keep Plugin commands between vundle#begin/end.
 Plugin 'godlygeek/tabular'
 Plugin 'plasticboy/vim-markdown'
-Plugin 'ervandew/supertab'
 Plugin 'SirVer/ultisnips'
 Plugin 'honza/vim-snippets'
 Plugin 'LaTeX-Box-Team/LaTeX-Box'
 Plugin 'Raimondi/delimitMate'
 Plugin 'Yggdroot/indentLine'
-Plugin 'scrooloose/nerdtree'
 Plugin 'kien/ctrlp.vim'
-Plugin 'airblade/vim-rooter'
 Plugin 'vim-syntastic/syntastic'
+Plugin 'Valloric/YouCompleteMe'
 
 
 
@@ -65,15 +63,6 @@ filetype indent on
 " The following changes the default filetype back to 'tex':
 let g:tex_flavor='latex'
 """""""""""""""""""""""""""""""""""""""""""""""""
-" make YCM compatible with UltiSnips (using supertab)
-"let g:ycm_key_list_select_completion = ['<C-n>', '<Down>']
-"let g:ycm_key_list_previous_completion = ['<C-p>', '<Up>']
-let g:SuperTabDefaultCompletionType = '<C-n>'
-
-" util snippet
-let g:UltiSnipsExpandTrigger="<tab>"
-let g:UltiSnipsJumpForwardTrigger="<c-b>"
-let g:UltiSnipsJumpBackwardTrigger="<c-z>"
 
 " save last position
 if has("autocmd")
@@ -106,6 +95,16 @@ let g:syntastic_check_on_wq = 0
 let g:syntastic_haskell_checkers = ['hdevtools', 'hlint']
 let g:syntastic_tex_checkers = []
 "let g:syntastic_tex_chktex_args = "-n all"
+
+"make UltiSnips compatible with ycm
+
+let g:UltiSnipsExpandTrigger="<c-n>"
+let g:UltiSnipsJumpForwardTrigger="<c-b>"
+let g:UltiSnipsJumpBackwardTrigger="<c-z>"
+
+"you complete me
+
+let g:ycm_filetype_blacklist = {} 
 
 "spell checking
 setlocal spell spelllang=en,de
