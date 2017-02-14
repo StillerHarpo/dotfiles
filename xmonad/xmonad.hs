@@ -68,6 +68,13 @@ main = xmonad
      ++ [((mod4Mask, k), composeAll [windows .  W.greedyView $ show i, saveFocus i])
         | (i, k) <- zip [1 ..9] [xK_1 .. xK_9]]
     )
+    `additionalKeysP`
+    [ ("<XF86AudioPlay>", spawn "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause")
+    , ("<XF86AudioPrev>", spawn "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous")
+    , ("<XF86AudioNext>", spawn "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next")]
+
+    
+
 -- Dont work use instead m,n
 -- 0x1008ff02 = XFMonBrightnessUp
 -- 0x1008ff03 = XFMonBrightnessDown
