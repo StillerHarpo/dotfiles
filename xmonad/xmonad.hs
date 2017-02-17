@@ -59,6 +59,7 @@ main = xmonad
      , ((mod4Mask, 0x63), spawn "~/scripts/clock")
 --     , ((mod4Mask, xK_a), composeAll [viewEmptyWorkspace, switchWorkspace])
      , ((mod4Mask, xK_a), viewEmptyWorkspace )
+     , ((mod4Mask, xK_f), spawnAndDo doFullFloat "termite -e listWindows")
      , ((mod4Mask, xK_s), goToNotify ) 
 --     , ((mod4Mask, xK_w), composeAll [viewScreen 1, saveFocus]) 
 --     , ((mod4Mask, xK_e), composeAll [viewScreen 0, saveFocus)
