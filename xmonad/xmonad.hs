@@ -29,7 +29,7 @@ instance UrgencyHook LibNotifyUrgencyHook where
              handle <- openFile filePath ReadMode
              (tempName, tempHandle) <- openTempFile "/var/tmp" "tempHaskell"
              contents <- hGetContents handle
-             hPutStr  tempHandle $  show $ checkCon (read idx) (read contents) 
+             hPutStr  tempHandle $  show $ checkCon (read idx) (getCont contents) 
              hClose handle
              hClose tempHandle
              removeFile filePath
@@ -39,6 +39,11 @@ instance UrgencyHook LibNotifyUrgencyHook where
 checkCon :: Int -> [Int] -> [Int]
 checkCon i xs | i `elem` xs = xs
               | otherwise = xs ++ [i]  
+
+getCont :: String -> [Int]
+getCont "" = [1]
+getCont c = read c
+
 
 main :: IO ()
 main = xmonad
@@ -112,7 +117,7 @@ startup = do
 saveFocus :: Int -> X()
 saveFocus i = do 
    (filePath, handle, tempName, tempHandle, contents) <- getTempFile
-   liftIO (hPutStr  tempHandle $  show ( i : tail (read contents)))
+   liftIO (hPutStr  tempHandle $  show ( i : tail (getCont contents)))
    closeTempFile filePath handle tempName tempHandle
 
 goToNotify :: X()
