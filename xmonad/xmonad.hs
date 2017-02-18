@@ -57,15 +57,10 @@ main = xmonad
      , ((0, 0x1008ff11),  spawn "volumeminus")
      , ((0, 0x1008ff12),  spawn "mute")
      , ((mod4Mask, 0x63), spawn "~/scripts/clock")
---     , ((mod4Mask, xK_a), composeAll [viewEmptyWorkspace, switchWorkspace])
-     , ((mod4Mask, xK_a), viewEmptyWorkspace )
+     , ((mod4Mask, xK_a), spawn "systemctl hibernate")
      , ((mod4Mask, xK_f), spawnAndDo doFullFloat "termite -e listWindows")
      , ((mod4Mask, xK_s), goToNotify ) 
---     , ((mod4Mask, xK_w), composeAll [viewScreen 1, saveFocus]) 
---     , ((mod4Mask, xK_e), composeAll [viewScreen 0, saveFocus)
  ]
---     ++ [((mod4Mask, k), composeAll [(windows .  W.greedyView $ show i), saveFocus ])
---        | (i, k) <- zip [1 ..9] [xK_1 .. xK_9]]
      ++ [((mod4Mask, k), composeAll [windows .  W.greedyView $ show i, saveFocus i])
         | (i, k) <- zip [1 ..9] [xK_1 .. xK_9]]
     )
@@ -114,21 +109,11 @@ startup = do
   liftIO $ writeFile "/var/tmp/notifyWindows" "[1]"
   liftIO $ writeFile "/var/local/hddoff" "1"
 
--- saveFocus :: X()
 saveFocus :: Int -> X()
---saveFocus = do 
 saveFocus i = do 
    (filePath, handle, tempName, tempHandle, contents) <- getTempFile
---   ws <- gets windowset
    liftIO (hPutStr  tempHandle $  show ( i : tail (read contents)))
---  liftIO (hPutStr  tempHandle $  show ( idx :(tail $ read contents)))
    closeTempFile filePath handle tempName tempHandle
---  where idx = read $  W.currentTag ws
-
--- currentWS :: X() -> Int
--- currentWS = do
---  ws <- gets windowset
---  return . read $ W.currentTag ws
 
 goToNotify :: X()
 goToNotify =  do 
