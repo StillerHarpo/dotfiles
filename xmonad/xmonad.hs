@@ -85,6 +85,7 @@ myManageHooks = composeAll
     [ isFullscreen --> doFullFloat
     , manageSpawn <+> manageHook def
     , className =? "mpv" --> doFullFloat
+    , className =? "feh" --> doFullFloat
     ]
 
 myLayout = Full ||| tiled ||| Mirror tiled 
