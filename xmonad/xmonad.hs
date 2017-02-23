@@ -58,9 +58,9 @@ main = xmonad
      , handleEventHook = handleEventHook def <+> fullscreenEventHook
      } 
      `additionalKeys` 
-     ([ ((0, 0x1008ff13),  spawn "volumeplus")
-     , ((0, 0x1008ff11),  spawn "volumeminus")
-     , ((0, 0x1008ff12),  spawn "mute")
+     ([ ((0, 0x1008ff13),  spawn "~/scripts/volumeplus")
+     , ((0, 0x1008ff11),  spawn "~/scripts/volumeminus")
+     , ((0, 0x1008ff12),  spawn "~/scripts/mute")
      , ((mod4Mask, 0x63), spawn "~/scripts/clock")
      , ((mod4Mask, xK_a), spawn "systemctl hibernate")
      , ((mod4Mask, xK_f), spawnAndDo doFullFloat "termite -e listWindows")
