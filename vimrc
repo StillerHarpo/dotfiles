@@ -98,7 +98,7 @@ let g:syntastic_tex_checkers = []
 
 "make UltiSnips compatible with ycm
 
-let g:UltiSnipsExpandTrigger="<c-n>"
+let g:UltiSnipsExpandTrigger="<Enter>"
 let g:UltiSnipsJumpForwardTrigger="<c-b>"
 let g:UltiSnipsJumpBackwardTrigger="<c-z>"
 
@@ -108,3 +108,10 @@ let g:ycm_filetype_blacklist = {}
 
 "spell checking
 setlocal spell spelllang=en,de
+set t_Co=256
+hi clear SpellBad
+hi SpellBad cterm=underline ctermfg=196
+hi clear SyntasticError 
+hi SyntasticError term=reverse ctermfg=15 ctermbg=250
+hi clear SyntasticWarning
+hi SyntasticWarning term=reverse ctermfg=15 ctermbg=11  
