@@ -63,7 +63,7 @@ main = xmonad
      , ((0, 0x1008ff12),  spawn "~/scripts/mute")
      , ((mod4Mask, 0x63), spawn "~/scripts/clock")
      , ((mod4Mask, xK_a), spawn "systemctl hibernate")
-     , ((mod4Mask, xK_f), spawnAndDo doFullFloat "termite -e listWindows")
+     , ((mod4Mask, xK_f), spawnAndDo doFullFloat "termite -e ~/projects/python/listWindows/listWindows.py")
      , ((mod4Mask, xK_s), goToNotify ) 
  ]
      ++ [((mod4Mask, k), composeAll [windows .  W.greedyView $ show i, saveFocus i])
