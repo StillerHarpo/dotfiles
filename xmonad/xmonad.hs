@@ -25,15 +25,12 @@ instance UrgencyHook LibNotifyUrgencyHook where
         Just idx <- W.findTag w Control.Applicative.<$> gets windowset
         safeSpawn "notify-send" [show name, "workspace " ++ idx]
         liftIO ( do  
-             filePath <- liftIO $ fmap (++ "/scripts/var/notifyWindows") getHomeDirectory
+             filePath <- fmap (++ "/scripts/var/notifyWindows") getHomeDirectory
              handle <- openFile filePath ReadMode
              (tempName, tempHandle) <- openTempFile "~/scripts/var" "tempHaskell"
              contents <- hGetContents handle
              hPutStr  tempHandle $  show $ checkCon (read idx) (getCont contents) 
-             hClose handle
-             hClose tempHandle
-             removeFile filePath
-             renameFile tempName filePath
+             closeTempFile filePath handle tempName tempHandle 
              )
  
 checkCon :: Int -> [Int] -> [Int]
@@ -58,21 +55,27 @@ main = xmonad
      , handleEventHook = handleEventHook def <+> fullscreenEventHook
      } 
      `additionalKeys` 
-     ([ ((0, 0x1008ff13),  spawn "~/scripts/volumeplus")
+     ([ ((0, 0x1008ff13), spawn "~/scripts/volumeplus")
      , ((0, 0x1008ff11),  spawn "~/scripts/volumeminus")
      , ((0, 0x1008ff12),  spawn "~/scripts/mute")
      , ((mod4Mask, 0x63), spawn "~/scripts/clock")
      , ((mod4Mask, xK_a), spawn "systemctl hibernate")
-     , ((mod4Mask, xK_f), spawnAndDo doFullFloat "termite -e ~/projects/python/listWindows/listWindows.py")
+     , ((mod4Mask, xK_f), spawnAndDo doFullFloat listWindows)
      , ((mod4Mask, xK_s), goToNotify ) 
  ]
-     ++ [((mod4Mask, k), composeAll [windows .  W.greedyView $ show i, saveFocus i])
+     ++ [((mod4Mask, k), composeAll 
+        [windows .  W.greedyView $ show i, liftIO $ saveFocus i])
         | (i, k) <- zip [1 ..9] [xK_1 .. xK_9]]
     )
     `additionalKeysP`
-    [ ("<XF86AudioPlay>", spawn "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause")
-    , ("<XF86AudioPrev>", spawn "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous")
-    , ("<XF86AudioNext>", spawn "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next")]
+    [ ("<XF86AudioPlay>", spawn $ dbus ++ dest ++ org ++ "PlayPause")
+    , ("<XF86AudioPrev>", spawn $ dbus ++ dest ++ org ++ "Previous")
+    , ("<XF86AudioNext>", spawn $ dbus ++ dest ++ org ++ "Next")]
+      where
+              listWindows= "termite -e ~/projects/python/listWindows/listWindows.py"
+              dbus = "dbus-send --print-reply "
+              dest = "--dest=org.mpris.MediaPlayer2.spotif " 
+              org = "/org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player."
 
     
 
@@ -112,38 +115,40 @@ startup = do
   spawnOn "4" "firefox"
   spawnOn "2" "termite -e mutt"
   spawn "xrandr --output DVI-I-1 --off"
-  path <- liftIO $ fmap (++ "/scripts/var/notifyWindows") getHomeDirectory
-  liftIO $ writeFile path "[1]"
-  liftIO $ writeFile "~/scripts/var/hddoff" "1"
+  liftIO (do
+    path <- fmap (++ "/scripts/var") getHomeDirectory
+    writeFile (path ++ "/notifyWindows") "[1]"
+    writeFile (path ++ "/hddoff") "1")
 
-saveFocus :: Int -> X()
+saveFocus :: Int -> IO()
 saveFocus i = do 
    (filePath, handle, tempName, tempHandle, contents) <- getTempFile
-   liftIO (hPutStr  tempHandle $  show ( i : tail (getCont contents)))
+   hPutStr  tempHandle $  show ( i : tail (getCont contents))
    closeTempFile filePath handle tempName tempHandle
 
 goToNotify :: X()
 goToNotify =  do 
-       (filePath, handle, tempName, tempHandle, contents) <- getTempFile
+       (filePath, handle, tempName, tempHandle, contents) <- liftIO getTempFile
        windows $ W.greedyView $ show $ last' $ read contents
-       liftIO $ hPutStr  tempHandle $  show $ deleteN $ read contents
-       closeTempFile filePath handle tempName tempHandle
+       liftIO (do 
+               hPutStr  tempHandle $  show $ deleteN $ read contents
+               closeTempFile filePath handle tempName tempHandle)
 
-getTempFile :: X (String, Handle , String, Handle, String)
+getTempFile :: IO (String, Handle , String, Handle, String)
 getTempFile = do
-       path <- liftIO $ fmap (++ "/scripts/var") getHomeDirectory
+       path <- fmap (++ "/scripts/var") getHomeDirectory
        let filePath = path ++ "/notifyWindows"
        handle <- liftIO $ openFile filePath ReadMode
-       (tempName, tempHandle) <- liftIO $ openTempFile path "tempHaskell"
-       contents <- liftIO $ hGetContents handle 
+       (tempName, tempHandle) <- openTempFile path "tempHaskell"
+       contents <- hGetContents handle 
        return(filePath, handle, tempName, tempHandle, contents)
 
-closeTempFile :: String -> Handle -> String -> Handle -> X()
+closeTempFile :: String -> Handle -> String -> Handle -> IO()
 closeTempFile filePath handle tempName tempHandle = do
-       liftIO $ hClose handle
-       liftIO $ hClose tempHandle
-       liftIO $ removeFile filePath
-       liftIO $ renameFile tempName filePath 
+       hClose handle
+       hClose tempHandle
+       removeFile filePath
+       renameFile tempName filePath 
        
 
 deleteN :: [Int] -> [Int]
