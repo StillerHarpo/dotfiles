@@ -16,6 +16,7 @@ import XMonad.Actions.PhysicalScreens
 import XMonad.Hooks.SetWMName
 import Control.Applicative
 import Data.Default
+import System.Directory
 
 data LibNotifyUrgencyHook = LibNotifyUrgencyHook deriving (Read, Show)
 
@@ -25,9 +26,9 @@ instance UrgencyHook LibNotifyUrgencyHook where
         Just idx <- W.findTag w Control.Applicative.<$> gets windowset
         safeSpawn "notify-send" [show name, "workspace " ++ idx]
         liftIO ( do  
-             let filePath = "/var/tmp/notifyWindows"
+             filePath <- liftIO $ fmap (++ "/scripts/var/notifyWindows") getHomeDirectory
              handle <- openFile filePath ReadMode
-             (tempName, tempHandle) <- openTempFile "/var/tmp" "tempHaskell"
+             (tempName, tempHandle) <- openTempFile "~/scripts/var" "tempHaskell"
              contents <- hGetContents handle
              hPutStr  tempHandle $  show $ checkCon (read idx) (getCont contents) 
              hClose handle
@@ -112,8 +113,9 @@ startup = do
   spawnOn "4" "firefox"
   spawnOn "2" "termite -e mutt"
   spawn "xrandr --output DVI-I-1 --off"
-  liftIO $ writeFile "/var/tmp/notifyWindows" "[1]"
-  liftIO $ writeFile "/var/local/hddoff" "1"
+  path <- liftIO $ fmap (++ "/scripts/var/notifyWindows") getHomeDirectory
+  liftIO $ writeFile path "[1]"
+  liftIO $ writeFile "~/scripts/var/hddoff" "1"
 
 saveFocus :: Int -> X()
 saveFocus i = do 
@@ -130,9 +132,10 @@ goToNotify =  do
 
 getTempFile :: X (String, Handle , String, Handle, String)
 getTempFile = do
-       let filePath = "/var/tmp/notifyWindows"
+       path <- liftIO $ fmap (++ "/scripts/var") getHomeDirectory
+       let filePath = path ++ "/notifyWindows"
        handle <- liftIO $ openFile filePath ReadMode
-       (tempName, tempHandle) <- liftIO $ openTempFile "/var/tmp" "tempHaskell"
+       (tempName, tempHandle) <- liftIO $ openTempFile path "tempHaskell"
        contents <- liftIO $ hGetContents handle 
        return(filePath, handle, tempName, tempHandle, contents)
 
