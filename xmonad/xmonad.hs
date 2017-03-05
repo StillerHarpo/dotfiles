@@ -16,7 +16,6 @@ import XMonad.Actions.PhysicalScreens
 import XMonad.Hooks.SetWMName
 import Control.Applicative
 import Data.Default
-import System.Directory
 
 data LibNotifyUrgencyHook = LibNotifyUrgencyHook deriving (Read, Show)
 
