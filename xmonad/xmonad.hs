@@ -113,8 +113,10 @@ startup = do
   spawnOn "3" "termite -e toxic"
   spawnOn "10" "firefox -P DarkFirefox"
   spawnOn "10" "firefox -P BrightFirefox"
-  spawnOn "4" "firefox"
+  spawnOn "4" "firefox -P default"
   spawnOn "2" "termite -e mutt"
+  spawnOn "5" "termite -e newsbeuter"
+  spawnOn "5" "termite -e rtv"
   spawn "xrandr --output DVI-I-1 --off"
   liftIO (do
     path <- fmap (++ "/scripts/var") getHomeDirectory
