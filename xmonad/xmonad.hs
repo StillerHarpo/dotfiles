@@ -92,7 +92,7 @@ myManageHooks = composeAll
     , className =? "feh" --> doFullFloat
     ]
 
-myLayout = gaps Full ||| [(L,200), (R,200)] Full ||| tiled ||| Mirror tiled 
+myLayout = Full ||| gaps [(L,300), (R,300)] Full ||| tiled ||| Mirror tiled 
   where
      -- default tiling algorithm partitions the screen into two panes
      tiled   = Tall nmaster delta ratio
@@ -119,7 +119,7 @@ startup = do
   liftIO (do
     path <- fmap (++ "/scripts/var") getHomeDirectory
     writeFile (path ++ "/notifyWindows") "[1]"
-    writeFile (path ++ "/hddoff") "1")
+    writeFile "/var/local/hddoff" "1")
 
 saveFocus :: Int -> IO()
 saveFocus i = do 
