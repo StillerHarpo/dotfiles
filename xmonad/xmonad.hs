@@ -16,6 +16,7 @@ import XMonad.Actions.PhysicalScreens
 import XMonad.Hooks.SetWMName
 import Control.Applicative
 import Data.Default
+import XMonad.Layout.Gaps
 
 data LibNotifyUrgencyHook = LibNotifyUrgencyHook deriving (Read, Show)
 
@@ -91,7 +92,7 @@ myManageHooks = composeAll
     , className =? "feh" --> doFullFloat
     ]
 
-myLayout = Full ||| tiled ||| Mirror tiled 
+myLayout = gaps Full ||| [(L,200), (R,200)] Full ||| tiled ||| Mirror tiled 
   where
      -- default tiling algorithm partitions the screen into two panes
      tiled   = Tall nmaster delta ratio
