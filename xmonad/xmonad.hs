@@ -26,9 +26,9 @@ instance UrgencyHook LibNotifyUrgencyHook where
         Just idx <- W.findTag w Control.Applicative.<$> gets windowset
         safeSpawn "notify-send" [show name, "workspace " ++ idx]
         liftIO ( do  
-             filePath <- fmap (++ "/scripts/var/notifyWindows") getHomeDirectory
-             handle <- openFile filePath ReadMode
-             (tempName, tempHandle) <- openTempFile "~/scripts/var" "tempHaskell"
+             filePath <- fmap (++ "/scripts/var") getHomeDirectory
+             handle <- openFile (filePath ++ "/notifyWindows") ReadMode
+             (tempName, tempHandle) <- openTempFile filePath "tempHaskell"
              contents <- hGetContents handle
              hPutStr  tempHandle $  show $ checkCon (read idx) (getCont contents) 
              closeTempFile filePath handle tempName tempHandle 
@@ -75,7 +75,7 @@ main = xmonad
       where
               listWindows= "termite -e ~/projects/python/listWindows/listWindows.py"
               dbus = "dbus-send --print-reply "
-              dest = "--dest=org.mpris.MediaPlayer2.spotif " 
+              dest = "--dest=org.mpris.MediaPlayer2.spotify " 
               org = "/org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player."
 
     
