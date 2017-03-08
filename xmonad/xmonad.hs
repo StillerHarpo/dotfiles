@@ -26,10 +26,7 @@ instance UrgencyHook LibNotifyUrgencyHook where
         Just idx <- W.findTag w Control.Applicative.<$> gets windowset
         safeSpawn "notify-send" [show name, "workspace " ++ idx]
         liftIO ( do  
-             filePath <- fmap (++ "/scripts/var") getHomeDirectory
-             handle <- openFile (filePath ++ "/notifyWindows") ReadMode
-             (tempName, tempHandle) <- openTempFile filePath "tempHaskell"
-             contents <- hGetContents handle
+             (filePath, handle, tempName, tempHandle, contents) <- liftIO getTempFile
              hPutStr  tempHandle $  show $ checkCon (read idx) (getCont contents) 
              closeTempFile filePath handle tempName tempHandle 
              )
