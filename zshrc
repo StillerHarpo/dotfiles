@@ -1,3 +1,4 @@
+
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile
 HISTSIZE=1000
@@ -13,11 +14,15 @@ zstyle ':completion:*' menu select
 autoload -Uz compinit
 compinit
 
+# imports
+source ~/projects/zsh-git-prompt/zshrc.sh
+
 autoload -Uz colors && colors
-PROMPT="%{$bg[green]%}%n@%m%{$reset_color%}%{$fg[green]%} %1~ %{$reset_color%}%# "
+PS1='%{$bg[green]%}%n@%m%{$reset_color%}%{$fg[green]%} %1~ %{$reset_color%}$(git_super_status) %# '
 
 setopt NO_HUP
 setopt NO_CHECK_JOBS 
+
 
 # Pahth
 
