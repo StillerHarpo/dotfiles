@@ -99,7 +99,7 @@ let g:syntastic_tex_checkers = []
 
 "make UltiSnips compatible with ycm
 
-let g:UltiSnipsExpandTrigger="<Enter>"
+let g:UltiSnipsExpandTrigger="<c-k>"
 let g:UltiSnipsJumpForwardTrigger="<c-b>"
 let g:UltiSnipsJumpBackwardTrigger="<c-z>"
 
