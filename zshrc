@@ -24,7 +24,7 @@ setopt NO_HUP
 setopt NO_CHECK_JOBS 
 
 
-# Pahth
+# Path
 
 PATH=$PATH:~/.cabal/bin
 
@@ -34,7 +34,6 @@ PATH=$PATH:~/.cabal/bin
 
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
-alias steam="LD_PRELOAD='/usr/$LIB/libstdc++.so.6 /usr/$LIB/libgcc_s.so.1 /usr/$LIB/libxcb.so.1 /usr/$LIB/libgpg-error.so' /usr/bin/steam" #get steam working
 alias emacs='emacs -nw'
 alias ls='ls -lh --color=auto'
 alias ll='ls -a'

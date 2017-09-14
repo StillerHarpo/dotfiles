@@ -57,7 +57,6 @@ main = xmonad
      , ((0, 0x1008ff11),  spawn "~/scripts/volumeminus")
      , ((0, 0x1008ff12),  spawn "~/scripts/mute")
      , ((mod4Mask, 0x63), spawn "~/scripts/clock")
-     , ((mod4Mask, xK_a), spawn "systemctl hibernate")
      , ((mod4Mask, xK_f), spawnAndDo doFullFloat listWindows)
      , ((mod4Mask, xK_s), goToNotify ) 
  ]
