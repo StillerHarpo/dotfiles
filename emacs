@@ -1,3 +1,4 @@
+(server-start)
 (require 'package)
 
 (setq package-enable-at-startup nil)
@@ -9,11 +10,9 @@
 
 (tool-bar-mode -1)
 (menu-bar-mode -1)
-"
 (global-nlinum-mode 1)
 (nlinum-relative-setup-evil)
 (nlinum-relative-on)
-"
 
 "
 haskell
@@ -32,6 +31,20 @@ haskell
 (require 'haskell-process)
 
 "
+python
+=====
+"
+(elpy-enable)
+(setq python-shell-completion-native-enable nil)
+;; flycheck
+(when (require 'flycheck nil t)
+  (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+  (add-hook 'elpy-mode-hook 'flycheck-mode))
+;; pep8 automation
+(require 'py-autopep8)
+(add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
+
+"
 error highligting
 ================
 "
@@ -44,3 +57,5 @@ error highligting
 (with-eval-after-load 'company
   (add-to-list 'company-backends 'company-nixos-options))
 
+;; Hide the startup message
+(setq inhibit-startup-message t)

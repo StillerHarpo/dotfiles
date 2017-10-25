@@ -1,4 +1,3 @@
-
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile
 HISTSIZE=1000
@@ -34,6 +33,7 @@ PATH=$PATH:~/.cabal/bin
 
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
+# alias steam="LD_PRELOAD='/usr/$LIB/libstdc++.so.6 /usr/$LIB/libgcc_s.so.1 /usr/$LIB/libxcb.so.1 /usr/$LIB/libgpg-error.so' /usr/bin/steam" #get steam working
 alias emacs='emacs -nw'
 alias ls='ls -lh --color=auto'
 alias ll='ls -a'
@@ -52,8 +52,13 @@ alias slock='killall unclutter; slock; unclutter -grab &' #with unclutter, slock
 alias trans='rlwrap trans' # to use history in tranlation shell
 alias jupyter='jupyter notebook ~/Dokumente/Uni/angewandteStatistik'
 export VISUAL='vim'
+export LIBVIRT_DEFAULT_URI="qemu:///system"
 ~/scripts/nextApts #show all next Apts in the next 24 hours
 export BROWSER=linkopen
+# use zsh in enviroments
+alias xmonad-env='load-env-xmonadenv zsh'
+alias python2-env='load-env-python2env zsh'
+alias python3-env='load-env-python3env zsh'
 # play the youtube search list
 function mm() {
     mpv ytdl://ytsearch10:"$@"
