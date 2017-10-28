@@ -1,4 +1,3 @@
-(server-start)
 (require 'package)
 
 (setq package-enable-at-startup nil)
@@ -13,6 +12,10 @@
 (global-nlinum-mode 1)
 (nlinum-relative-setup-evil)
 (nlinum-relative-on)
+
+;; get same path as in shell
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
 
 "
 haskell
@@ -59,3 +62,4 @@ error highligting
 
 ;; Hide the startup message
 (setq inhibit-startup-message t)
+

@@ -34,12 +34,12 @@ PATH=$PATH:~/.cabal/bin
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 # alias steam="LD_PRELOAD='/usr/$LIB/libstdc++.so.6 /usr/$LIB/libgcc_s.so.1 /usr/$LIB/libxcb.so.1 /usr/$LIB/libgpg-error.so' /usr/bin/steam" #get steam working
-alias emacs='emacs -nw'
+alias emacs='emacsclient -c'
 alias ls='ls -lh --color=auto'
 alias ll='ls -a'
 alias srg='sr google'
 alias srw='sr wikipedia'
-alias rtv='nix-shell -p pythonPackages.six --run "export BROWSER=linkopen; export EDITOR=vim; export PAGER=less;rtv"'
+alias rtv='nix-shell -p python -p pythonPackages.six --run "export BROWSER=linkopen; export EDITOR=vim; export PAGER=less;rtv --asci"'
 alias vimread='vim -RNu ~/.vimreadrc' 
 alias randomYoutube='mpv $(shuf /var/tmp/youtubeVideos)'
 alias .='cd ..'
@@ -56,9 +56,11 @@ export LIBVIRT_DEFAULT_URI="qemu:///system"
 ~/scripts/nextApts #show all next Apts in the next 24 hours
 export BROWSER=linkopen
 # use zsh in enviroments
-alias xmonad-env='load-env-xmonadenv zsh'
-alias python2-env='load-env-python2env zsh'
-alias python3-env='load-env-python3env zsh'
+alias xmonad-env='load-env-xmonad-env zsh'
+alias python2-env='load-env-python2-env zsh'
+alias python3-env='load-env-python3-env zsh'
+alias r-env='load-env-r-env zsh'
+
 # play the youtube search list
 function mm() {
     mpv ytdl://ytsearch10:"$@"
