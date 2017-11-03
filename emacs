@@ -17,6 +17,11 @@
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
 
+;; save backupfiles in tmp
+(setq backup-directory-alist
+          `((".*" . ,temporary-file-directory)))
+    (setq auto-save-file-name-transforms
+          `((".*" ,temporary-file-directory t)))
 "
 haskell
 ======
