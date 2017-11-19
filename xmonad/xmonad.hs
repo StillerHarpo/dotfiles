@@ -1,5 +1,9 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 import XMonad
+import Control.Arrow(second)
+import Control.Concurrent
 import qualified XMonad.StackSet as W
+import qualified Data.Map as M
 import XMonad.Hooks.ManageHelpers
 import XMonad.Hooks.UrgencyHook
 import XMonad.Util.NamedWindows
@@ -17,28 +21,16 @@ import XMonad.Hooks.SetWMName
 import Control.Applicative
 import Data.Default
 import XMonad.Layout.Gaps
+import XMonad.Util.Dmenu(menuMapArgs)
+import qualified XMonad.Util.ExtensibleState as XS
+
 
 data LibNotifyUrgencyHook = LibNotifyUrgencyHook deriving (Read, Show)
 
-instance UrgencyHook LibNotifyUrgencyHook where
-    urgencyHook LibNotifyUrgencyHook w = do
-        name     <- getName w
-        Just idx <- W.findTag w Control.Applicative.<$> gets windowset
-        safeSpawn "notify-send" [show name, "workspace " ++ idx]
-        liftIO ( do  
-             (filePath, handle, tempName, tempHandle, contents) <- liftIO getTempFile
-             hPutStr  tempHandle $  show $ checkCon (read idx) (getCont contents) 
-             closeTempFile filePath handle tempName tempHandle 
-             )
- 
-checkCon :: Int -> [Int] -> [Int]
-checkCon i xs | i `elem` xs = xs
-              | otherwise = xs ++ [i]  
+data ListStorage = ListStorage [WorkspaceId] deriving Typeable
 
-getCont :: String -> [Int]
-getCont "" = [1]
-getCont c = read c
-
+instance ExtensionClass ListStorage where
+  initialValue = ListStorage ["1"]        
 
 main :: IO ()
 main = xmonad
@@ -46,9 +38,8 @@ main = xmonad
      $ ewmh def
      { terminal        ="termite"
      , modMask         = mod4Mask
-     , workspaces      = map show [1 .. 10 ]
+     , workspaces      = map show [1 .. 20 ]
      , layoutHook      = smartBorders myLayout
-     , startupHook     = startup
      , manageHook      = myManageHooks
      , handleEventHook = handleEventHook def <+> fullscreenEventHook
      } 
@@ -57,11 +48,11 @@ main = xmonad
      , ((0, 0x1008ff11),  spawn "~/scripts/volumeminus")
      , ((0, 0x1008ff12),  spawn "~/scripts/mute")
      , ((mod4Mask, 0x63), spawn "~/scripts/clock")
-     , ((mod4Mask, xK_f), spawnAndDo doFullFloat listWindows)
+     , ((mod4Mask, xK_f), composeAll [actionMenu, saveFocus])
      , ((mod4Mask, xK_s), goToNotify ) 
  ]
      ++ [((mod4Mask, k), composeAll 
-        [windows .  W.greedyView $ show i, liftIO $ saveFocus i])
+        [windows .  W.greedyView $ show i, saveFocus])
         | (i, k) <- zip [1 ..9] [xK_1 .. xK_9]]
     )
     `additionalKeysP`
@@ -102,58 +93,90 @@ myLayout = Full ||| gaps [(L,300), (R,300)] Full ||| tiled ||| Mirror tiled
      -- Percent of screen to increment by when resizing panes
      delta   = 3/100
 
-startup :: X()
-startup = do
-  setWMName "LG3D"
-  spawnOn "1" "termite -e calcurse"
-  spawnOn "3" "termite -e toxic"
-  spawnOn "10" "firefox -P DarkFirefox"
-  spawnOn "10" "firefox -P BrightFirefox"
-  spawnOn "4" "firefox -P default"
-  spawnOn "2" "termite -e mutt"
-  spawnOn "5" "termite -e newsbeuter"
-  spawnOn "5" "termite -e rtv"
-  spawn "xrandr --output DVI-I-1 --off"
-  liftIO (do
-    path <- fmap (++ "/scripts/var") getHomeDirectory
-    writeFile (path ++ "/notifyWindows") "[1]"
-    writeFile "/var/local/hddoff" "1")
+-- | programms that can be start from dmenu
+programms :: [(String,String)] -- ^ (name in dmenu, executable)
+programms = [ ("firefox","firefox") 
+            , ("anki", "anki")
+            , ("spotify", "spotify")
+            , ("netflix", "google-chrome-stable \"netflix.com\"") 
+            , ("mutt", startTerm "mutt") 
+            , ("calcurse", startTerm "calcurse")
+            , ("toxic", startTerm "toxic")
+            , ("rtv", startTerm "rtv")
+            , ("newsbeuter", startTerm "newsbeuter")
+            ]
+  where
+    startTerm s = "termite --title=" ++ s ++ " --exec=" ++ s 
 
-saveFocus :: Int -> IO()
-saveFocus i = do 
-   (filePath, handle, tempName, tempHandle, contents) <- getTempFile
-   hPutStr  tempHandle $  show ( i : tail (getCont contents))
-   closeTempFile filePath handle tempName tempHandle
+-- | save the current workspace, so you can later come back with goToNotify
+saveFocus :: X() 
+saveFocus = do 
+   i <- (W.tag . W.workspace . W.current) <$> gets windowset
+   XS.modify $ changeHead i 
 
+changeHead :: WorkspaceId -> ListStorage -> ListStorage 
+changeHead _ l@(ListStorage [])   = l 
+changeHead i (ListStorage (_:xs)) = ListStorage $ i:xs
+
+-- | cycle through the windows that triggered urgency and go back to the window,
+--   you came from
 goToNotify :: X()
 goToNotify =  do 
-       (filePath, handle, tempName, tempHandle, contents) <- liftIO getTempFile
-       windows $ W.greedyView $ show $ last' $ read contents
-       liftIO (do 
-               hPutStr  tempHandle $  show $ deleteN $ read contents
-               closeTempFile filePath handle tempName tempHandle)
+       i <- lastStorage <$> XS.get
+       XS.modify deleteN
+       windows $ W.greedyView i 
 
-getTempFile :: IO (String, Handle , String, Handle, String)
-getTempFile = do
-       path <- fmap (++ "/scripts/var") getHomeDirectory
-       let filePath = path ++ "/notifyWindows"
-       handle <- liftIO $ openFile filePath ReadMode
-       (tempName, tempHandle) <- openTempFile path "tempHaskell"
-       contents <- hGetContents handle 
-       return(filePath, handle, tempName, tempHandle, contents)
+lastStorage :: ListStorage -> WorkspaceId
+lastStorage (ListStorage xs) = last xs
 
-closeTempFile :: String -> Handle -> String -> Handle -> IO()
-closeTempFile filePath handle tempName tempHandle = do
-       hClose handle
-       hClose tempHandle
-       removeFile filePath
-       renameFile tempName filePath 
-       
+deleteN :: ListStorage -> ListStorage
+deleteN l@(ListStorage [x]) = l 
+deleteN (ListStorage xs)    = ListStorage $ init xs
 
-deleteN :: [Int] -> [Int]
-deleteN [x] = [x]
-deleteN xs = init xs
+-- | if a window triggers a urgency, save the worspace on which it is 
+--   and show a notrification
+instance UrgencyHook LibNotifyUrgencyHook where
+    urgencyHook LibNotifyUrgencyHook w = do
+        name     <- getName w
+        Just idx <- W.findTag w <$> gets windowset
+        safeSpawn "notify-send" [show name, "workspace " ++ idx]
+        XS.modify $ addCont idx 
 
-last' :: [Int] -> Int
-last' [x] = x
-last' (x:xs) = last' xs
+-- | add the worspace at the end of the list, if it isn't already in it 
+addCont :: WorkspaceId -> ListStorage -> ListStorage 
+addCont i l@(ListStorage xs) | i `elem` xs = l
+                             | otherwise   = ListStorage $ xs ++ [i]  
+
+
+-- | Calls dmenuMap to grab the appropriate Window, and hands it off to action
+--   if found.
+actionMenu :: X ()
+actionMenu = windowMap >>= menuMapFunction >>= flip whenJust id 
+    where
+      menuMapFunction :: M.Map String a -> X (Maybe a)
+      menuMapFunction = menuMapArgs "dmenu" ["-i","-l","30"]
+
+-- | A map from window names to Windows, given a windowTitler function.
+windowMap :: X (M.Map String (X ()))
+windowMap = do
+  ws <- gets windowset
+  M.fromList . (++ openProgramms) . toAction . concat 
+    <$> mapM keyValuePairs (W.workspaces ws)
+ where keyValuePairs ws = mapM (keyValuePair ws) $ W.integrate' (W.stack ws)
+       keyValuePair ws w = flip (,) w <$> decorateName ws w
+       toAction = map (second (windows . W.focusWindow)) 
+       openProgramms = map 
+                         (\(name,prog) 
+                           -> ("~ " ++ name ++ " ~",
+                              composeAll [viewEmptyWorkspace,
+                                           spawn prog,saveFocus])) 
+                         programms
+
+
+-- | Returns the window name as will be listed in dmenu.
+--   Tagged with the workspace ID, to guarantee uniqueness, and to let the user
+--   know where he's going.
+decorateName :: WindowSpace -> Window -> X String
+decorateName ws w = do
+  name <- show <$> getName w
+  return $ name ++ " [" ++ W.tag ws ++ "]"
