@@ -27,7 +27,7 @@ import qualified XMonad.Util.ExtensibleState as XS
 
 data LibNotifyUrgencyHook = LibNotifyUrgencyHook deriving (Read, Show)
 
-data ListStorage = ListStorage [WorkspaceId] deriving Typeable
+newtype ListStorage = ListStorage [WorkspaceId] deriving Typeable
 
 instance ExtensionClass ListStorage where
   initialValue = ListStorage ["1"]        
