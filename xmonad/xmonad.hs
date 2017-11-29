@@ -104,6 +104,8 @@ programms = [ ("firefox","firefox")
             , ("toxic", startTerm "toxic")
             , ("rtv", startTerm "rtv")
             , ("newsbeuter", startTerm "newsbeuter")
+            , ("tor", "tor-browser")
+            , ("termite", "termite")
             ]
   where
     startTerm s = "termite --title=" ++ s ++ " --exec=" ++ s 
