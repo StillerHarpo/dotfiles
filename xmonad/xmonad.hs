@@ -22,6 +22,10 @@ import Control.Applicative
 import Data.Default
 import XMonad.Layout.Gaps
 import XMonad.Util.Dmenu(menuMapArgs)
+import qualified XMonad.Layout.Tabbed as T
+import qualified XMonad.Layout.Groups as G
+import qualified XMonad.Layout.Groups.Helpers as GH
+import XMonad.Layout.Column
 import qualified XMonad.Util.ExtensibleState as XS
 
 
@@ -49,7 +53,18 @@ main = xmonad
      , ((0, 0x1008ff12),  spawn "~/scripts/mute")
      , ((mod4Mask, 0x63), spawn "~/scripts/clock")
      , ((mod4Mask, xK_f), composeAll [actionMenu, saveFocus])
-     , ((mod4Mask, xK_s), goToNotify ) 
+     , ((mod4Mask, xK_g), goToNotify ) 
+     , ((mod4Mask, xK_j), GH.focusUp) 
+     , ((mod4Mask, xK_k), GH.focusDown) 
+     , ((mod4Mask, xK_h), shrinkMasterGroups) 
+     , ((mod4Mask, xK_l), expandMasterGroups) 
+     , ((mod4Mask .|. shiftMask, xK_j), GH.swapUp) 
+     , ((mod4Mask .|. shiftMask, xK_k), GH.swapDown) 
+     , ((mod4Mask, xK_s), GH.focusGroupMaster) 
+     , ((mod4Mask, xK_a), GH.focusGroupUp) 
+     , ((mod4Mask, xK_d), GH.focusGroupDown) 
+     , ((mod4Mask .|. shiftMask, xK_a), GH.moveToGroupUp False) 
+     , ((mod4Mask .|. shiftMask, xK_d), GH.moveToGroupDown False) 
  ]
      ++ [((mod4Mask, k), composeAll 
         [windows .  W.greedyView $ show i, saveFocus])
@@ -71,6 +86,13 @@ main = xmonad
 -- 0x1008ff02 = XFMonBrightnessUp
 -- 0x1008ff03 = XFMonBrightnessDown
 
+-- | Shrink the master area
+shrinkMasterGroups :: X ()
+shrinkMasterGroups = sendMessage $ G.ToEnclosing $ SomeMessage $ Shrink
+
+-- | Expand the master area
+expandMasterGroups :: X ()
+expandMasterGroups = sendMessage $ G.ToEnclosing $ SomeMessage $ Expand
  
 myManageHooks = composeAll
     [ isFullscreen --> doFullFloat
@@ -79,19 +101,9 @@ myManageHooks = composeAll
     , className =? "feh" --> doFullFloat
     ]
 
-myLayout = Full ||| gaps [(L,300), (R,300)] Full ||| tiled ||| Mirror tiled 
-  where
-     -- default tiling algorithm partitions the screen into two panes
-     tiled   = Tall nmaster delta ratio
-
-     -- The default number of windows in the master pane
-     nmaster = 1
-
-     -- Default proportion of screen occupied by master pane
-     ratio   = 1/2
-
-     -- Percent of screen to increment by when resizing panes
-     delta   = 3/100
+myLayout = Full ||| shrinked ||| tapped 
+  where shrinked = gaps [(L,300), (R,300)] Full 
+        tapped   = G.group T.simpleTabbed $ Mirror $ Column 1 
 
 -- | programms that can be start from dmenu
 programms :: [(String,String)] -- ^ (name in dmenu, executable)
