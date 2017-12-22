@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 import XMonad
 import Control.Arrow(second)
+import Control.Monad(unless)
 import Control.Concurrent
 import qualified XMonad.StackSet as W
 import qualified Data.Map as M
@@ -88,11 +89,11 @@ main = xmonad
 
 -- | Shrink the master area
 shrinkMasterGroups :: X ()
-shrinkMasterGroups = sendMessage $ G.ToEnclosing $ SomeMessage $ Shrink
+shrinkMasterGroups = sendMessage $ G.ToEnclosing $ SomeMessage Shrink
 
 -- | Expand the master area
 expandMasterGroups :: X ()
-expandMasterGroups = sendMessage $ G.ToEnclosing $ SomeMessage $ Expand
+expandMasterGroups = sendMessage $ G.ToEnclosing $ SomeMessage Expand
  
 myManageHooks = composeAll
     [ isFullscreen --> doFullFloat
@@ -147,16 +148,22 @@ deleteN :: ListStorage -> ListStorage
 deleteN l@(ListStorage [x]) = l 
 deleteN (ListStorage xs)    = ListStorage $ init xs
 
--- | if a window triggers a urgency, save the worspace on which it is 
---   and show a notrification
+-- | if a window triggers a urgency, save the workspace on which it is 
+--   and show a notification
 instance UrgencyHook LibNotifyUrgencyHook where
     urgencyHook LibNotifyUrgencyHook w = do
         name     <- getName w
-        Just idx <- W.findTag w <$> gets windowset
-        safeSpawn "notify-send" [show name, "workspace " ++ idx]
-        XS.modify $ addCont idx 
+        unless (match $ show name) $ do
+          Just idx <- W.findTag w <$> gets windowset
+          safeSpawn "notify-send" [show name, "workspace " ++ idx]
+          XS.modify $ addCont idx 
+        where 
+          unwantedNotifcations = [ "qutebrowser" ]
+          match n = any (matchEnd n) unwantedNotifcations
+          matchEnd n uN = take (length uN) (reverse n) == reverse uN 
+    
 
--- | add the worspace at the end of the list, if it isn't already in it 
+-- | add the workspace at the end of the list, if it isn't already in it 
 addCont :: WorkspaceId -> ListStorage -> ListStorage 
 addCont i l@(ListStorage xs) | i `elem` xs = l
                              | otherwise   = ListStorage $ xs ++ [i]  
