@@ -53,6 +53,7 @@ main = xmonad
      , ((0, 0x1008ff11),  spawn "~/scripts/volumeminus")
      , ((0, 0x1008ff12),  spawn "~/scripts/mute")
      , ((mod4Mask, 0x63), spawn "~/scripts/clock")
+     , ((mod4Mask, xK_b), spawn "qutebrowser")
      , ((mod4Mask, xK_f), composeAll [actionMenu, saveFocus])
      , ((mod4Mask, xK_g), goToNotify ) 
      , ((mod4Mask, xK_j), GH.focusUp) 
