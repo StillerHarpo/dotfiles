@@ -46,6 +46,7 @@ main = xmonad
      , workspaces      = map show [1 .. 20 ]
      , layoutHook      = smartBorders myLayout
      , manageHook      = myManageHooks
+     , startupHook     = setWMName "LG3D"
      , handleEventHook = handleEventHook def <+> fullscreenEventHook
      } 
      `additionalKeys` 
@@ -117,7 +118,7 @@ programms = [ ("firefox","firefox")
             , ("calcurse", startTerm "calcurse")
             , ("toxic", startTerm "toxic")
             , ("rtv", startTerm "rtv")
-            , ("newsbeuter", startTerm "newsbeuter")
+            , ("newsboat", startTerm "newsboat")
             , ("tor", "tor-browser")
             , ("termite", "termite")
             ]
@@ -156,7 +157,7 @@ instance UrgencyHook LibNotifyUrgencyHook where
         name     <- getName w
         unless (match $ show name) $ do
           Just idx <- W.findTag w <$> gets windowset
-          safeSpawn "notify-send" [show name, "workspace " ++ idx]
+          safeSpawn "notify-send" ["-t 3000", show name, "workspace " ++ idx]
           XS.modify $ addCont idx 
         where 
           unwantedNotifcations = [ "qutebrowser" ]
