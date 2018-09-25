@@ -117,6 +117,7 @@ myLayout = Full ||| shrinked ||| tapped
 programms :: [(String,String)] -- ^ (name in dmenu, executable)
 programms = [ ("firefox","firefox") 
             , ("anki", "anki")
+            , ("signal", "signal-desktop")
             , ("spotify", "spotify")
             , ("netflix", "google-chrome-stable \"netflix.com\"") 
             , ("mutt", startTerm "mutt") 
