@@ -158,7 +158,7 @@ It should only modify the values of Spacemacs settings."
    ;; with `:variables' keyword (similar to layers). Check the editing styles
    ;; section of the documentation for details on available variables.
    ;; (default 'vim)
-   dotspacemacs-editing-style 'vim
+   dotspacemacs-editing-style 'hybrid
 
    ;; If non-nil output loading progress in `*Messages*' buffer. (default nil)
    dotspacemacs-verbose-loading nil
@@ -448,6 +448,13 @@ configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
   (setq evil-want-abbrev-expand-on-insert-exit nil)
+  (setq org-agenda-files (list "~/init.org"))
+  (defun current-dreams ()
+    (interactive)
+    (find-file
+     (format-time-string
+      "~/Dokumente/Traeume/%Y/%B/Traeume_Vom_%d_%m_%Y.org")))
+
   )
 
 (defun dotspacemacs/user-load ()
