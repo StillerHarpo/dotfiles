@@ -459,7 +459,26 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
      (format-time-string
       "~/Dokumente/Traeume/%Y/%B/Traeume_Vom_%d_%m_%Y.org")))
 
-  )
+  (setq mediareg (rx (or "youtube."
+                         "youtu.be"
+                         (and ".mp3" eol)
+                         (and ".mp4" eol)
+                         (and ".m4v$" eol)
+                         "v.redd.it")))
+
+  (setq shr-width 70)
+
+  (setq browse-url-browser-function `((,mediareg . browse-url-linkopen)
+                                      ("." . eww-browse-url)))
+
+  (defun browse-url-linkopen (url &rest args)
+    (setq url (browse-url-encode-url url))
+    (let* ((process-environment (browse-url-process-environment)))
+      (apply 'start-process
+             (concat "linkopen " url) nil
+             "~/scripts/linkopen"
+             (list url))))
+)
 
 (defun dotspacemacs/user-load ()
   "Library to load while dumping.
