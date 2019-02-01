@@ -54,6 +54,7 @@ main = xmonad
      , ((0, 0x1008ff11),  spawn "~/scripts/volumeminus")
      , ((0, 0x1008ff12),  spawn "~/scripts/mute")
      , ((mod4Mask, 0x63), spawn "~/scripts/clock")
+     , ((mod4Mask, xK_x), spawn toggleRedshift)
      , ((mod4Mask, xK_Return), spawn "termite")
      , ((mod4Mask .|. shiftMask, xK_Return), composeAll [viewEmptyWorkspace, spawn "termite",saveFocus])
      , ((mod4Mask, xK_b), spawn "qutebrowser")
@@ -87,6 +88,9 @@ main = xmonad
               dbus = "dbus-send --print-reply "
               dest = "--dest=org.mpris.MediaPlayer2.spotify "
               org = "/org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player."
+              toggleRedshift = "systemctl --user is-active redshift.service"
+                              ++ " && systemctl --user stop redshift.service"
+                              ++ " || systemctl --user start redshift.service"
 
 
 
