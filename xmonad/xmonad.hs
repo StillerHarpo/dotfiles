@@ -200,7 +200,7 @@ windowMap = do
        toAction = map (second (windows . W.focusWindow))
        openProgramms = map
                          (\(name,prog)
-                           -> ("~ " ++ name ++ " ~",
+                           -> ("𞹾" ++ name,
                               composeAll [viewEmptyWorkspace,
                                            spawn prog,saveFocus]))
                          programms
