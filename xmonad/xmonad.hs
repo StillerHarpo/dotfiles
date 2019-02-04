@@ -59,7 +59,7 @@ main = xmonad
      , ((mod4Mask .|. shiftMask, xK_Return), composeAll [viewEmptyWorkspace, spawn "termite",saveFocus])
      , ((mod4Mask, xK_b), spawn "qutebrowser")
      , ((mod4Mask .|. shiftMask, xK_b), composeAll [viewEmptyWorkspace, spawn "qutebrowser",saveFocus])
-     , ((mod4Mask, xK_v), spawn "emacsclient -c init.org")
+     , ((mod4Mask, xK_v), spawn "emacsclient -c ~/Dokumente/init.org")
      , ((mod4Mask .|. shiftMask, xK_v), composeAll [viewEmptyWorkspace, spawn "emacsclient -c init.org",saveFocus])
      , ((mod4Mask, xK_f), composeAll [actionMenu, saveFocus])
      , ((mod4Mask, xK_g), goToNotify )
