@@ -101,7 +101,7 @@ myDzenConfig :: Int -> String -> X ()
 myDzenConfig len = dzenConfig (timeout 1 >=> centered)
   where centered = onCurr (center len 66)
              >=> font "-adobe-helvetica-*-*-*-*-24-*-*-*-*-*-*-*"
-             >=> addArgs ["-fg", "#80c0ff"]
+             >=> addArgs ["-fg", "#10bb20"]
 
 clock :: X ()
 clock = output >>= myDzenConfig 600
