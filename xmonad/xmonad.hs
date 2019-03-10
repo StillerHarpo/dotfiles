@@ -45,6 +45,7 @@ main = xmonad
      , modMask         = mod4Mask
      , workspaces      = map show [1 .. 20 ]
      , layoutHook      = smartBorders myLayout
+     , layoutHook      = noBorders myLayout
      , manageHook      = myManageHooks
      , startupHook     = setWMName "LG3D"
      , handleEventHook = handleEventHook def <+> fullscreenEventHook
