@@ -21,7 +21,9 @@ import XMonad.Actions.PhysicalScreens
 import XMonad.Hooks.SetWMName
 import Control.Applicative
 import Data.Default
+import Data.List
 import XMonad.Layout.Gaps
+import XMonad.Util.Dzen
 import XMonad.Util.Dmenu(menuMapArgs)
 import qualified XMonad.Layout.Tabbed as T
 import qualified XMonad.Layout.Groups as G
@@ -51,10 +53,10 @@ main = xmonad
      , handleEventHook = handleEventHook def <+> fullscreenEventHook
      }
      `additionalKeys`
-     ([ ((0, 0x1008ff13), spawn "~/scripts/volumeplus")
-     , ((0, 0x1008ff11),  spawn "~/scripts/volumeminus")
-     , ((0, 0x1008ff12),  spawn "~/scripts/mute")
-     , ((mod4Mask, 0x63), spawn "~/scripts/clock")
+     ([ ((0, 0x1008ff13), volume Plus)
+     , ((0, 0x1008ff11),  volume Minus)
+     , ((0, 0x1008ff12),  mute)
+     , ((mod4Mask, 0x63), clock)
      , ((mod4Mask, xK_x), spawn toggleRedshift)
      , ((mod4Mask, xK_Return), spawn "termite")
      , ((mod4Mask .|. shiftMask, xK_Return), composeAll [viewEmptyWorkspace, spawn "termite",saveFocus])
@@ -93,7 +95,41 @@ main = xmonad
                               ++ " && systemctl --user stop redshift.service"
                               ++ " || systemctl --user start redshift.service"
 
+-- Key scripts --
+myDzenConfig :: Int -> String -> X ()
+myDzenConfig len = dzenConfig (timeout 1 >=> centered)
+  where centered = onCurr (center len 66)
+             >=> font "-adobe-helvetica-*-*-*-*-24-*-*-*-*-*-*-*"
+             >=> addArgs ["-fg", "#80c0ff"]
 
+clock :: X ()
+clock = output >>= myDzenConfig 600
+  where
+   output = do date <- runProcessWithInput "date" ["+%H:%M:%S%n%A, %d. %B %Y"] []
+               battery <- io $ readFile "/sys/class/power_supply/BAT0/capacity"
+               pure . replace $ date ++ "     Battery: " ++ init battery ++ "%"
+   replace "" = ""
+   replace ('\n':str) = ' ' : replace str
+   replace (s:str) = s : replace str
+
+mute :: X ()
+mute = spawn script >> output >>= myDzenConfig 300
+  where
+    script = "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+    output = head . filter (isInfixOf "muted") . take 1000 . dropWhile (isInfixOf "*"). lines
+      <$> runProcessWithInput "pacmd" ["list-sinks"] ""
+
+
+data Volume = Plus | Minus
+volume :: Volume -> X ()
+volume vol = spawn script >> output >>= myDzenConfig 300
+  where
+    script = "pactl set-sink-volume @DEFAULT_SINK@ " ++ volChar vol ++ "5%"
+    volChar Plus = "+"
+    volChar Minus = "-"
+    output = (!! 4) . words . head . filter (isInfixOf "volume")
+      . take 1000 . dropWhile (isInfixOf "*") . lines
+      <$> runProcessWithInput "pacmd" ["list-sinks"] ""
 
 -- Dont work use instead m,n
 -- 0x1008ff02 = XFMonBrightnessUp
