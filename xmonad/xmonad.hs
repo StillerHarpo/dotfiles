@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TupleSections #-}
 import XMonad
 import Control.Arrow(second)
 import Control.Monad(unless)
@@ -9,8 +10,8 @@ import XMonad.Hooks.ManageHelpers
 import XMonad.Hooks.UrgencyHook
 import XMonad.Util.NamedWindows
 import XMonad.Util.Run
-import XMonad.Layout.NoBorders
 import XMonad.Util.EZConfig
+import XMonad.Layout.NoBorders
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Actions.SpawnOn
 import System.Process
@@ -46,7 +47,6 @@ main = xmonad
      { terminal        ="termite"
      , modMask         = mod4Mask
      , workspaces      = map show [1 .. 20 ]
-     , layoutHook      = smartBorders myLayout
      , layoutHook      = noBorders myLayout
      , manageHook      = myManageHooks
      , startupHook     = setWMName "LG3D"
@@ -59,11 +59,11 @@ main = xmonad
      , ((mod4Mask, 0x63), clock)
      , ((mod4Mask, xK_x), spawn toggleRedshift)
      , ((mod4Mask, xK_Return), spawn "termite")
-     , ((mod4Mask .|. shiftMask, xK_Return), composeAll [viewEmptyWorkspace, spawn "termite",saveFocus])
+     , ((mod4Mask .|. shiftMask, xK_Return), spawnOnEmpty "termite")
      , ((mod4Mask, xK_b), spawn "qutebrowser")
-     , ((mod4Mask .|. shiftMask, xK_b), composeAll [viewEmptyWorkspace, spawn "qutebrowser",saveFocus])
+     , ((mod4Mask .|. shiftMask, xK_b), spawnOnEmpty "qutebrowser")
      , ((mod4Mask, xK_v), spawn "emacsclient -c ~/Dokumente/init.org")
-     , ((mod4Mask .|. shiftMask, xK_v), composeAll [viewEmptyWorkspace, spawn "emacsclient -c init.org",saveFocus])
+     , ((mod4Mask .|. shiftMask, xK_v), spawnOnEmpty "emacsclient -c ~/Dokumente/init.org")
      , ((mod4Mask, xK_f), composeAll [actionMenu, saveFocus])
      , ((mod4Mask, xK_g), goToNotify )
      , ((mod4Mask, xK_j), GH.focusUp)
@@ -87,6 +87,7 @@ main = xmonad
     , ("<XF86AudioPrev>", spawn $ dbus ++ dest ++ org ++ "Previous")
     , ("<XF86AudioNext>", spawn $ dbus ++ dest ++ org ++ "Next")]
       where
+              spawnOnEmpty prog = composeAll [viewEmptyWorkspace, spawn prog, saveFocus]
               listWindows= "termite -e ~/projects/python/listWindows/listWindows.py"
               dbus = "dbus-send --print-reply "
               dest = "--dest=org.mpris.MediaPlayer2.spotify "
@@ -175,7 +176,7 @@ programms = [ ("firefox","firefox")
 -- | save the current workspace, so you can later come back with goToNotify
 saveFocus :: X()
 saveFocus = do
-   i <- (W.tag . W.workspace . W.current) <$> gets windowset
+   i <- W.tag . W.workspace . W.current <$> gets windowset
    XS.modify $ changeHead i
 
 changeHead :: WorkspaceId -> ListStorage -> ListStorage
@@ -233,7 +234,7 @@ windowMap = do
   M.fromList . (++ openProgramms) . toAction . concat
     <$> mapM keyValuePairs (W.workspaces ws)
  where keyValuePairs ws = mapM (keyValuePair ws) $ W.integrate' (W.stack ws)
-       keyValuePair ws w = flip (,) w <$> decorateName ws w
+       keyValuePair ws w = (, w) <$> decorateName ws w
        toAction = map (second (windows . W.focusWindow))
        openProgramms = map
                          (\(name,prog)
