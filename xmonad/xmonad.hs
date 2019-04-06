@@ -114,18 +114,18 @@ clock = output >>= myDzenConfig 600
    replace (s:str) = s : replace str
 
 mute :: X ()
-mute = spawn script >> output >>= myDzenConfig 300
+mute = script >> output >>= myDzenConfig 300
   where
-    script = "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+    script = runProcessWithInput "pactl" [ "set-sink-mute", "@DEFAULT_SINK@", "toggle" ] ""
     output = head . filter (isInfixOf "muted") . take 1000 . dropWhile (isInfixOf "*"). lines
       <$> runProcessWithInput "pacmd" ["list-sinks"] ""
 
 
 data Volume = Plus | Minus
 volume :: Volume -> X ()
-volume vol = spawn script >> output >>= myDzenConfig 300
+volume vol = script >> output >>= myDzenConfig 300
   where
-    script = "pactl set-sink-volume @DEFAULT_SINK@ " ++ volChar vol ++ "5%"
+    script = runProcessWithInput "pactl" [ "set-sink-volume", "@DEFAULT_SINK@", volChar vol ++ "5%" ] ""
     volChar Plus = "+"
     volChar Minus = "-"
     output = (!! 4) . words . head . filter (isInfixOf "volume")
