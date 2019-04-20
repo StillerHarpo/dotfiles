@@ -83,9 +83,13 @@ main = xmonad
         | (i, k) <- zip [1 ..9] [xK_1 .. xK_9]]
     )
     `additionalKeysP`
-    [ ("<XF86AudioPlay>", spawn $ dbus ++ dest ++ org ++ "PlayPause")
+    [( "<XF86MonBrightnessUp>", backlight Plus)
+    , ("<XF86MonBrightnessDown>", backlight Minus)
+    , ("<XF86AudioPlay>", spawn $ dbus ++ dest ++ org ++ "PlayPause")
     , ("<XF86AudioPrev>", spawn $ dbus ++ dest ++ org ++ "Previous")
     , ("<XF86AudioNext>", spawn $ dbus ++ dest ++ org ++ "Next")]
+
+
       where
               spawnOnEmpty prog = composeAll [viewEmptyWorkspace, spawn prog, saveFocus]
               listWindows= "termite -e ~/projects/python/listWindows/listWindows.py"
@@ -132,6 +136,12 @@ volume vol = script >> output >>= myDzenConfig 300
     output = (!! 4) . words . head . filter (isInfixOf "volume")
       . take 1000 . dropWhile (isInfixOf "*") . lines
       <$> runProcessWithInput "pacmd" ["list-sinks"] ""
+
+backlight :: Direction -> X ()
+backlight dir = runProcessWithInput "light" [ dirOp dir, "10" ] "" >> return ()
+  where
+    dirOp Plus = "-A"
+    dirOp Minus = "-U"
 
 -- Dont work use instead m,n
 -- 0x1008ff02 = XFMonBrightnessUp
