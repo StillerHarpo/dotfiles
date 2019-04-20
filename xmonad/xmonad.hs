@@ -121,8 +121,9 @@ mute = script >> output >>= myDzenConfig 300
       <$> runProcessWithInput "pacmd" ["list-sinks"] ""
 
 
-data Volume = Plus | Minus
-volume :: Volume -> X ()
+data Direction = Plus | Minus
+
+volume :: Direction -> X ()
 volume vol = script >> output >>= myDzenConfig 300
   where
     script = runProcessWithInput "pactl" [ "set-sink-volume", "@DEFAULT_SINK@", volChar vol ++ "5%" ] ""
