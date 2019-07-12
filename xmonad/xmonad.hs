@@ -164,7 +164,7 @@ myManageHooks = composeAll
 
 myLayout = Full ||| shrinked ||| tapped
   where shrinked = gaps [(L,300), (R,300)] Full
-        tapped   = G.group T.simpleTabbed $ Mirror $ Column 1
+        tabbed   = G.group T.simpleTabbed $ Mirror $ Column 1
 
 -- | programms that can be start from dmenu
 programms :: [(String,String)] -- ^ (name in dmenu, executable)
