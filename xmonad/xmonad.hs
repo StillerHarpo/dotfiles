@@ -162,7 +162,7 @@ myManageHooks = composeAll
     , className =? "feh" --> doFullFloat
     ]
 
-myLayout = Full ||| shrinked ||| tapped
+myLayout = Full ||| shrinked ||| tabbed
   where shrinked = gaps [(L,300), (R,300)] Full
         tabbed   = G.group T.simpleTabbed $ Mirror $ Column 1
 
