@@ -32,7 +32,6 @@ import qualified XMonad.Layout.Groups.Helpers as GH
 import XMonad.Layout.Column
 import qualified XMonad.Util.ExtensibleState as XS
 
-
 data LibNotifyUrgencyHook = LibNotifyUrgencyHook deriving (Read, Show)
 
 newtype ListStorage = ListStorage [WorkspaceId] deriving Typeable
@@ -44,7 +43,7 @@ main :: IO ()
 main = xmonad
      $ withUrgencyHook LibNotifyUrgencyHook
      $ ewmh def
-     { terminal        ="termite"
+     { terminal        = "termite"
      , modMask         = mod4Mask
      , workspaces      = map show [1 .. 20 ]
      , layoutHook      = smartBorders $ noBorders myLayout
@@ -53,52 +52,66 @@ main = xmonad
      , handleEventHook = handleEventHook def <+> fullscreenEventHook
      }
      `additionalKeys`
-     ([ ((0, 0x1008ff13), volume Plus)
-     , ((0, 0x1008ff11),  volume Minus)
-     , ((0, 0x1008ff12),  mute)
-     , ((mod4Mask, 0x63), clock)
-     , ((mod4Mask, xK_x), spawn toggleRedshift)
-     , ((mod4Mask, xK_Return), spawn "termite")
-     , ((mod4Mask .|. shiftMask, xK_Return), spawnOnEmpty "termite")
-     , ((mod4Mask, xK_b), spawn "qutebrowser")
-     , ((mod4Mask .|. shiftMask, xK_b), spawnOnEmpty "qutebrowser")
-     , ((mod4Mask, xK_v), spawn "emacsclient -c ~/Dokumente/init.org")
-     , ((mod4Mask .|. shiftMask, xK_v), spawnOnEmpty "emacsclient -c ~/Dokumente/init.org")
-     , ((mod4Mask, xK_f), composeAll [actionMenu, saveFocus])
-     , ((mod4Mask, xK_g), goToNotify )
-     , ((mod4Mask, xK_j), GH.focusUp)
-     , ((mod4Mask, xK_k), GH.focusDown)
-     , ((mod4Mask, xK_h), shrinkMasterGroups)
-     , ((mod4Mask, xK_l), expandMasterGroups)
-     , ((mod4Mask .|. shiftMask, xK_j), GH.swapUp)
-     , ((mod4Mask .|. shiftMask, xK_k), GH.swapDown)
-     , ((mod4Mask, xK_s), GH.focusGroupMaster)
-     , ((mod4Mask, xK_a), GH.focusGroupUp)
-     , ((mod4Mask, xK_d), GH.focusGroupDown)
-     , ((mod4Mask .|. shiftMask, xK_a), GH.moveToGroupUp False)
-     , ((mod4Mask .|. shiftMask, xK_d), GH.moveToGroupDown False)
- ]
-     ++ [((mod4Mask, k), composeAll
-        [windows .  W.greedyView $ show i, saveFocus])
-        | (i, k) <- zip [1 ..9] [xK_1 .. xK_9]]
+     ([ ((0                     , 0x1008ff13), volume Plus)
+      , ((0                     , 0x1008ff11), volume Minus)
+      , ((0                     , 0x1008ff12), mute)
+      , ((mod4Mask              , 0x63)      , clock)
+      , ((mod4Mask              , xK_x)      , spawn toggleRedshift)
+      , ((mod4Mask              , xK_Return) , spawn        "termite")
+      , ((mod4Mask .|. shiftMask, xK_Return) , spawnOnEmpty "termite")
+      , ((mod4Mask              , xK_b)      , spawn        "qutebrowser")
+      , ((mod4Mask .|. shiftMask, xK_b)      , spawnOnEmpty "qutebrowser")
+      , ((mod4Mask              , xK_v)      , spawn        emacs)
+      , ((mod4Mask .|. shiftMask, xK_v)      , spawnOnEmpty emacs)
+      , ((mod4Mask              , xK_f)      , composeAll [actionMenu
+                                                          , saveFocus])
+      , ((mod4Mask              , xK_g)      , goToNotify )
+      , ((mod4Mask              , xK_j)      , GH.focusUp)
+      , ((mod4Mask              , xK_k)      , GH.focusDown)
+      , ((mod4Mask              , xK_h)      , shrinkMasterGroups)
+      , ((mod4Mask              , xK_l)      , expandMasterGroups)
+      , ((mod4Mask .|. shiftMask, xK_j)      , GH.swapUp)
+      , ((mod4Mask .|. shiftMask, xK_k)      , GH.swapDown)
+      , ((mod4Mask              , xK_s)      , GH.focusGroupMaster)
+      , ((mod4Mask              , xK_a)      , GH.focusGroupUp)
+      , ((mod4Mask              , xK_d)      , GH.focusGroupDown)
+      , ((mod4Mask .|. shiftMask, xK_a)      , GH.moveToGroupUp False)
+      , ((mod4Mask .|. shiftMask, xK_d)      , GH.moveToGroupDown False)
+      , ((mod4Mask              , xK_p)      , spawn $ dbus ++ dest
+                                                            ++ org
+                                                            ++ "PlayPause")
+      , ((mod4Mask              , xK_i)      , spawn $ dbus ++ dest
+                                                            ++ org
+                                                            ++ "Previous")
+      , ((mod4Mask              , xK_o)      , spawn $ dbus ++ dest
+                                                            ++ org
+                                                            ++ "Next")
+      ]
+     ++
+      [((mod4Mask, k), composeAll [windows .  W.greedyView $ show i, saveFocus])
+                 | (i, k) <- zip [1 ..9] [xK_1 .. xK_9]
+      ]
     )
     `additionalKeysP`
-    [( "<XF86MonBrightnessUp>", backlight Plus)
+    [( "<XF86MonBrightnessUp>"  , backlight Plus)
     , ("<XF86MonBrightnessDown>", backlight Minus)
-    , ("<XF86AudioPlay>", spawn $ dbus ++ dest ++ org ++ "PlayPause")
-    , ("<XF86AudioPrev>", spawn $ dbus ++ dest ++ org ++ "Previous")
-    , ("<XF86AudioNext>", spawn $ dbus ++ dest ++ org ++ "Next")]
-
-
+    , ("<XF86AudioPlay>"        , playPause)
+    , ("<XF86AudioPrev>"        , playPrevious)
+    , ("<XF86AudioNext>"        , playNext)]
       where
-              spawnOnEmpty prog = composeAll [viewEmptyWorkspace, spawn prog, saveFocus]
-              listWindows= "termite -e ~/projects/python/listWindows/listWindows.py"
-              dbus = "dbus-send --print-reply "
-              dest = "--dest=org.mpris.MediaPlayer2.spotify "
-              org = "/org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player."
-              toggleRedshift = "systemctl --user is-active redshift.service"
-                              ++ " && systemctl --user stop redshift.service"
-                              ++ " || systemctl --user start redshift.service"
+        spawnOnEmpty prog = composeAll [viewEmptyWorkspace, spawn prog, saveFocus]
+        listWindows = "termite -e ~/projects/python/listWindows/listWindows.py"
+        emacs = "emacsclient -c ~/Dokumente/init.org"
+        dbus = "dbus-send --print-reply "
+        dest = "--dest=org.mpris.MediaPlayer2.spotify "
+        org = "/org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player."
+        playPause = spawn $ dbus ++ dest ++ org ++ "PlayPause"
+        playNext = spawn $ dbus ++ dest ++ org ++ "Previous"
+        playPrevious = spawn $ dbus ++ dest ++ org ++ "Next"
+        toggleRedshift = "systemctl --user is-active redshift.service"
+                        ++ " && systemctl --user stop redshift.service"
+                        ++ " || systemctl --user start redshift.service"
+
 
 -- Key scripts --
 myDzenConfig :: Int -> String -> X ()
@@ -113,9 +126,9 @@ clock = output >>= myDzenConfig 600
    output = do date <- runProcessWithInput "date" ["+%H:%M:%S%n%A, %d. %B %Y"] []
                battery <- io $ readFile "/sys/class/power_supply/BAT0/capacity"
                pure . replace $ date ++ "     Battery: " ++ init battery ++ "%"
-   replace "" = ""
+   replace ""         = ""
    replace ('\n':str) = ' ' : replace str
-   replace (s:str) = s : replace str
+   replace (s   :str) = s : replace str
 
 mute :: X ()
 mute = script >> output >>= myDzenConfig 300
@@ -168,18 +181,18 @@ myLayout = Full ||| shrinked ||| tapped
 
 -- | programms that can be start from dmenu
 programms :: [(String,String)] -- ^ (name in dmenu, executable)
-programms = [ ("firefox","firefox")
-            , ("anki", "anki")
-            , ("signal", "signal-desktop")
-            , ("spotify", "spotify")
-            , ("netflix", "google-chrome-stable \"netflix.com\"")
-            , ("mutt", startTerm "mutt")
+programms = [ ("firefox" ,"firefox")
+            , ("anki"    , "anki")
+            , ("signal"  , "signal-desktop")
+            , ("spotify" , "spotify")
+            , ("netflix" , "google-chrome-stable \"netflix.com\"")
+            , ("mutt"    , startTerm "mutt")
             , ("calcurse", startTerm "calcurse")
-            , ("toxic", startTerm "toxic")
-            , ("rtv", startTerm "rtv")
+            , ("toxic"   , startTerm "toxic")
+            , ("rtv"     , startTerm "rtv")
             , ("newsboat", startTerm "newsboat")
-            , ("tor", "tor-browser")
-            , ("termite", "termite")
+            , ("tor"     , "tor-browser")
+            , ("termite" , "termite")
             ]
   where
     startTerm s = "termite --title=" ++ s ++ " --exec=" ++ s
@@ -223,12 +236,10 @@ instance UrgencyHook LibNotifyUrgencyHook where
           match n = any (matchEnd n) unwantedNotifcations
           matchEnd n uN = take (length uN) (reverse n) == reverse uN
 
-
 -- | add the workspace at the end of the list, if it isn't already in it
 addCont :: WorkspaceId -> ListStorage -> ListStorage
 addCont i l@(ListStorage xs) | i `elem` xs = l
                              | otherwise   = ListStorage $ xs ++ [i]
-
 
 -- | Calls dmenuMap to grab the appropriate Window, and hands it off to action
 --   if found.
@@ -251,13 +262,12 @@ windowMap = do
                          (\(name,prog)
                            -> ("𞹾" ++ name,
                               composeAll [viewEmptyWorkspace,
-                                           spawn prog,saveFocus]))
+                                           spawn prog, saveFocus]))
                          programms
 
-
 -- | Returns the window name as will be listed in dmenu.
---   Tagged with the workspace ID, to guarantee uniqueness, and to let the user
---   know where he's going.
+--   Tagged with the workspace ID, to guarantee uniqueness, and to let
+--   the user know where he's going.
 decorateName :: WindowSpace -> Window -> X String
 decorateName ws w = do
   name <- show <$> getName w
