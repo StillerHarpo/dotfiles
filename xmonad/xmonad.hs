@@ -31,6 +31,7 @@ import qualified XMonad.Layout.Groups as G
 import qualified XMonad.Layout.Groups.Helpers as GH
 import XMonad.Layout.Column
 import qualified XMonad.Util.ExtensibleState as XS
+import XMonad.Actions.CycleWS
 
 data LibNotifyUrgencyHook = LibNotifyUrgencyHook deriving (Read, Show)
 
@@ -86,10 +87,15 @@ main = xmonad
       , ((mod4Mask              , xK_o)      , spawn $ dbus ++ dest
                                                             ++ org
                                                             ++ "Next")
+      -- rematch workspace keys to take workspaces in to account
+      , ((mod4Mask              , xK_w)      , composeAll [ nextScreen
+                                                          , saveFocus])
+      , ((mod4Mask              , xK_e)      , composeAll [ swapNextScreen
+                                                          , saveFocus])
       ]
      ++
-      [((mod4Mask, k), composeAll [windows .  W.greedyView $ show i, saveFocus])
-                 | (i, k) <- zip [1 ..9] [xK_1 .. xK_9]
+      [ ((mod4Mask              , k)         , saveView i)
+                  | (i, k) <- zip [1 ..9] [xK_1 .. xK_9]
       ]
     )
     `additionalKeysP`
@@ -100,6 +106,7 @@ main = xmonad
     , ("<XF86AudioNext>"        , playNext)]
       where
         spawnOnEmpty prog = composeAll [viewEmptyWorkspace, spawn prog, saveFocus]
+        saveView i = composeAll [windows . W.greedyView $ show i , saveFocus]
         listWindows = "termite -e ~/projects/python/listWindows/listWindows.py"
         emacs = "emacsclient -c ~/Dokumente/init.org"
         dbus = "dbus-send --print-reply "
