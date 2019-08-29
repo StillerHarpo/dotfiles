@@ -252,12 +252,15 @@ actionMenu = windowMap >>= menuMapFunction >>= flip whenJust id
 -- | A map from window names to Windows, given a windowTitler function.
 windowMap :: X (M.Map String (X ()))
 windowMap = do
-  ws <- gets windowset
+  ws <- gets $ W.workspaces . windowset
   M.fromList . (++ openProgramms) . toAction . concat
-    <$> mapM keyValuePairs (W.workspaces ws)
+    <$> mapM keyValuePairs ws
  where keyValuePairs ws = mapM (keyValuePair ws) $ W.integrate' (W.stack ws)
        keyValuePair ws w = (, w) <$> decorateName ws w
-       toAction = map (second (windows . W.focusWindow))
+       toAction = map $ second getWindow
+       getWindow w = do
+         Just idx <- W.findTag w <$> gets windowset
+         windows $ W.greedyView idx
        openProgramms = map
                          (\(name,prog)
                            -> ("𞹾" ++ name,
