@@ -267,7 +267,7 @@ windowMap = do
        toAction = map $ second getWindow
        getWindow w = do
          Just idx <- W.findTag w <$> gets windowset
-         windows $ W.greedyView idx
+         windows $ W.focusWindow w . W.greedyView idx
        openProgramms = map
                          (\(name,prog)
                            -> ("𞹾" ++ name,
