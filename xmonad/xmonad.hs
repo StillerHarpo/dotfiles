@@ -58,6 +58,7 @@ main = xmonad
       , ((0                     , 0x1008ff12), mute)
       , ((mod4Mask              , 0x63)      , clock)
       , ((mod4Mask              , xK_x)      , spawn toggleRedshift)
+      , ((mod4Mask              , xK_y)      , spawn toggleMonitor)
       , ((mod4Mask              , xK_Return) , spawn        "termite")
       , ((mod4Mask .|. shiftMask, xK_Return) , spawnOnEmpty "termite")
       , ((mod4Mask              , xK_b)      , spawn        "qutebrowser")
@@ -118,6 +119,7 @@ main = xmonad
         toggleRedshift = "systemctl --user is-active redshift.service"
                         ++ " && systemctl --user stop redshift.service"
                         ++ " || systemctl --user start redshift.service"
+        toggleMonitor = "~/scripts/toggleMonitor"
 
 
 -- Key scripts --
