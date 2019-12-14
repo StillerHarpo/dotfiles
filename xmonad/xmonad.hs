@@ -88,15 +88,9 @@ main = xmonad
       , ((mod4Mask              , xK_d)      , GH.focusGroupDown)
       , ((mod4Mask .|. shiftMask, xK_a)      , GH.moveToGroupUp False)
       , ((mod4Mask .|. shiftMask, xK_d)      , GH.moveToGroupDown False)
-      , ((mod4Mask              , xK_p)      , spawn $ dbus ++ dest
-                                                            ++ org
-                                                            ++ "PlayPause")
-      , ((mod4Mask              , xK_i)      , spawn $ dbus ++ dest
-                                                            ++ org
-                                                            ++ "Previous")
-      , ((mod4Mask              , xK_o)      , spawn $ dbus ++ dest
-                                                            ++ org
-                                                            ++ "Next")
+      , ((mod4Mask              , xK_p)      , playPause)
+      , ((mod4Mask              , xK_i)      , playPrevious)
+      , ((mod4Mask              , xK_o)      , playNext)
       -- rematch workspace keys to take workspaces in to account
       , ((mod4Mask              , xK_w)      , composeAll [ nextScreen
                                                           , saveFocus])
@@ -123,8 +117,8 @@ main = xmonad
         dest = "--dest=org.mpris.MediaPlayer2.spotify "
         org = "/org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player."
         playPause = spawn $ dbus ++ dest ++ org ++ "PlayPause"
-        playNext = spawn $ dbus ++ dest ++ org ++ "Previous"
-        playPrevious = spawn $ dbus ++ dest ++ org ++ "Next"
+        playNext = spawn $ dbus ++ dest ++ org ++ "Next"
+        playPrevious = spawn $ dbus ++ dest ++ org ++ "Previous"
         toggleRedshift = "systemctl --user is-active redshift.service"
                         ++ " && systemctl --user stop redshift.service"
                         ++ " || systemctl --user start redshift.service"
