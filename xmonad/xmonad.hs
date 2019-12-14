@@ -8,6 +8,7 @@ import           Control.Concurrent
 import           Control.Monad (unless, void)
 import           Data.Default
 import           Data.List
+import           Data.List.Utils (replace)
 import qualified Data.Map as M
 import           System.Directory
 import           System.IO
@@ -137,15 +138,14 @@ myDzenConfig len = dzenConfig (timeout 1 >=> centered)
              >=> font "-adobe-helvetica-*-*-*-*-24-*-*-*-*-*-*-*"
              >=> addArgs ["-fg", "#10bb20"]
 
+clockString :: X String
+clockString = do
+  date <- runProcessWithInput "date" ["+%H:%M:%S%n%A, %d. %B %Y"] []
+  battery <- io $ readFile "/sys/class/power_supply/BAT0/capacity"
+  pure . replace "\n" " " $ date ++ "     Battery: " ++ init battery ++ "%"
+
 clock :: X ()
-clock = output >>= myDzenConfig 600
-  where
-   output = do date <- runProcessWithInput "date" ["+%H:%M:%S%n%A, %d. %B %Y"] []
-               battery <- io $ readFile "/sys/class/power_supply/BAT0/capacity"
-               pure . replace $ date ++ "     Battery: " ++ init battery ++ "%"
-   replace ""         = ""
-   replace ('\n':str) = ' ' : replace str
-   replace (s   :str) = s : replace str
+clock = clockString >>= myDzenConfig 600
 
 mute :: X ()
 mute = script >> output >>= myDzenConfig 300
