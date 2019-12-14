@@ -5,7 +5,7 @@
 import           Control.Applicative
 import           Control.Arrow (second)
 import           Control.Concurrent
-import           Control.Monad (unless, void)
+import           Control.Monad (unless, void, join, when)
 import           Data.Default
 import           Data.List
 import           Data.List.Utils (replace)
@@ -31,7 +31,7 @@ import qualified XMonad.Layout.Tabbed as T
 import           XMonad.Prompt hiding (font)
 import           XMonad.Prompt.RunOrRaise
 import qualified XMonad.StackSet as W
-import           XMonad.Util.Dmenu (menuMapArgs)
+import           XMonad.Util.Dmenu (menuArgs)
 import           XMonad.Util.Dzen
 import           XMonad.Util.EZConfig
 import qualified XMonad.Util.ExtensibleState as XS
@@ -39,6 +39,7 @@ import           XMonad.Util.NamedWindows
 import           XMonad.Util.Run
 import           XMonad.Util.Stack
 import           XMonad.Actions.MessageFeedback
+import           Data.Maybe(fromMaybe)
 
 data LibNotifyUrgencyHook = LibNotifyUrgencyHook deriving (Read, Show)
 
@@ -72,7 +73,7 @@ main = xmonad
       , ((mod4Mask .|. shiftMask, xK_b)      , spawnOnEmpty "qutebrowser")
       , ((mod4Mask              , xK_v)      , spawn        emacs)
       , ((mod4Mask .|. shiftMask, xK_v)      , spawnOnEmpty emacs)
-      , ((mod4Mask              , xK_f)      , composeAll [runOrShift
+      , ((mod4Mask              , xK_f)      , composeAll [ runOrShift
                                                           , saveFocus])
       , ((mod4Mask .|. shiftMask, xK_f)      , composeAll [runOrRaise
                                                           , saveFocus])
@@ -193,23 +194,31 @@ myLayout = Full ||| shrinked ||| tabbed
 
 -- | programms that can be start from dmenu
 programms :: [(String,String)] -- ^ (name in dmenu, executable)
-programms = [ ("firefox" ,"firefox")
-            , ("anki"    , "anki")
-            , ("signal"  , "signal-desktop")
-            , ("spotify" , "spotify")
-            , ("netflix" , "google-chrome-stable \"netflix.com\"")
-            , ("mutt"    , startTerm "mutt")
-            , ("calcurse", startTerm "calcurse")
-            , ("toxic"   , startTerm "toxic")
-            , ("rtv"     , startTerm "rtv")
-            , ("newsboat", startTerm "newsboat")
-            , ("tor"     , "tor-browser")
-            , ("termite" , "termite")
-            , ("VirtualBox" , "VirtualBox")
+programms = [ ("firefox"            , "firefox")
+            , ("anki"               , "anki")
+            , ("whatsApp"           , browser Normal "web.whatsapp.com")
+            , ("signal"             , "signal-desktop")
             , ("mattermost-desktop" , "mattermost-desktop")
+            , ("spotify"            , "spotify")
+            , ("netflix"            , browser Normal "netflix.com")
+            , ("youtube"            , startTerm "youtube-viewer")
+            , ("mu4e"               , emacs "mu4e")
+            , ("elfeed"             , emacs "elfeed")
+            , ("calcurse"           , startTerm "calcurse")
+            , ("toxic"              , startTerm "toxic")
+            , ("rtv"                , startTerm "rtv")
+            , ("tor"                , "tor-browser")
+            , ("termite"            , "termite")
+            , ("virtualBox"         , "VirtualBox")
+            , ("github"             , browser Normal "github.com")
+            , ("gitlab"             , browser Normal "gitlab.com")
+            , ("wikipedia"          , browser Private "wikipedia.de")
+            , ("dict"               , browser Private "dict.cc")
             ]
   where
     startTerm s = "termite --title=" ++ s ++ " --exec=" ++ s
+    emacs s = "emacsclient -c -e \"(" ++ s ++ ")\"" ++ maximizeEmacs
+    maximizeEmacs = " -e \"(spacemacs/toggle-maximize-buffer)\""
 
 -- | save the current window, so you can later come back with goToNotify
 saveFocus :: X()
@@ -259,16 +268,37 @@ addCont w l@(ListStorage ws) | w `elem` ws = l
 
 data BrowserMode = Normal | Private
 
+-- | open url in browser
+browser :: BrowserMode -> String -> String
+browser mode url = "firefox " ++ modeFlag mode ++ "\"" ++ urlWithSearch ++ "\""
+  where
+   urlWithSearch = if any (== '.') url && not (any (== ' ')  url)
+                   then url
+                   else "duckduckgo.com\\?q=" ++ replaceSpaces url
+   modeFlag Normal = "-new-window "
+   modeFlag Private = "-private-window "
+
 -- | Calls dmenuMap to grab the appropriate Window or program, and hands it off to action
 --   if found .
 actionMenu :: (Window -> X()) -- ^ the action
            -> Bool -- ^ should the program be open on a new workspace
            -> X ()
-actionMenu action viewEmpty = windowMap >>= menuMapFunction >>= flip whenJust id
+actionMenu action viewEmpty = do
+  time <- clockString
+  let menuMapFunction =
+        menuMapArgsDefault "rofi"
+                           [ "-dmenu"
+                           , "-i"
+                           , "-p"
+                           , "window"
+                           , "-theme"
+                           , "gruvbox-dark"
+                           , "-mesg"
+                           , time]
+                           defaultAction
+  join (windowMap >>= menuMapFunction)
     where
-      menuMapFunction :: M.Map String a -> X (Maybe a)
-      menuMapFunction = menuMapArgs "rofi" ["-dmenu", "-i"]
-      -- menuMapFunction = menuMapArgs "dmenu" ["-i","-l","30"]
+      defaultAction url = when (length url > 0) $ spawn $ browser Private url
 
       -- | A map from window names to Windows, given a windowTitler function.
       windowMap :: X (M.Map String (X ()))
@@ -314,7 +344,16 @@ delWin n w s = case W.findTag w s of
                     _                             -> s
     where go from = onWorkspace from (W.delete' w)
 
--- onZipper, onLayout, addWindows
+-- | Like 'menuMapArgs' but also takes a default command
+menuMapArgsDefault :: MonadIO m => String -> [String]
+                   -> (String -> a)
+                   -> M.Map String a
+                   -> m a
+menuMapArgsDefault menuCmd args def selectionMap = do
+  selection <- menuFunction (M.keys selectionMap)
+  return $ fromMaybe (def selection) $ M.lookup selection selectionMap
+      where
+        menuFunction = menuArgs menuCmd args
 
 -- | is not exported from Stackset
 onWorkspace :: (Eq i, Eq s) => i -> (W.StackSet i l a s sd -> W.StackSet i l a s sd)
@@ -334,3 +373,11 @@ alt f g = alt2 (G.Modify f) $ windows g
 alt2 :: G.GroupsMessage -> X () -> X ()
 alt2 m x = do b <- send m
               unless b x
+
+replaceSpaces :: String -> String
+replaceSpaces ""       = ""
+replaceSpaces (' ':ss) = '+':removeLeading ss
+  where
+    removeLeading (' ':ss) = removeLeading ss
+    removeLeading (s  :ss) = s:replaceSpaces ss
+replaceSpaces (s  :ss) = s:replaceSpaces ss
