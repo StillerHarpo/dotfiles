@@ -41,10 +41,10 @@ import           XMonad.Actions.MessageFeedback
 
 data LibNotifyUrgencyHook = LibNotifyUrgencyHook deriving (Read, Show)
 
-newtype ListStorage = ListStorage [WorkspaceId] deriving Typeable
+newtype ListStorage = ListStorage [Window] deriving Typeable
 
 instance ExtensionClass ListStorage where
-  initialValue = ListStorage ["1"]
+  initialValue = ListStorage []
 
 main :: IO ()
 main = xmonad
@@ -217,25 +217,27 @@ programms = [ ("firefox" ,"firefox")
   where
     startTerm s = "termite --title=" ++ s ++ " --exec=" ++ s
 
--- | save the current workspace, so you can later come back with goToNotify
+-- | save the current window, so you can later come back with goToNotify
 saveFocus :: X()
 saveFocus = do
-   i <- W.tag . W.workspace . W.current <$> gets windowset
-   XS.modify $ changeHead i
+   workspace <- W.stack . W.workspace . W.current <$> gets windowset
+   let window = W.focus <$> workspace
+   whenJust window
+     (XS.modify . changeHead)
 
-changeHead :: WorkspaceId -> ListStorage -> ListStorage
+changeHead :: Window -> ListStorage -> ListStorage
 changeHead _ l@(ListStorage [])   = l
-changeHead i (ListStorage (_:xs)) = ListStorage $ i:xs
+changeHead w (ListStorage (_:ws)) = ListStorage $ w:ws
 
 -- | cycle through the windows that triggered urgency and go back to the window,
 --   you came from
 goToNotify :: X()
 goToNotify =  do
-       i <- lastStorage <$> XS.get
+       w <- lastStorage <$> XS.get
        XS.modify deleteN
-       windows $ W.greedyView i
+       windows $ W.focusWindow w
 
-lastStorage :: ListStorage -> WorkspaceId
+lastStorage :: ListStorage -> Window
 lastStorage (ListStorage xs) = last xs
 
 deleteN :: ListStorage -> ListStorage
@@ -250,16 +252,18 @@ instance UrgencyHook LibNotifyUrgencyHook where
         unless (match $ show name) $ do
           Just idx <- W.findTag w <$> gets windowset
           safeSpawn "notify-send" ["-t 3000", show name, "workspace " ++ idx]
-          XS.modify $ addCont idx
+          XS.modify $ addCont w
         where
           unwantedNotifcations = [ "qutebrowser" ]
           match n = any (matchEnd n) unwantedNotifcations
           matchEnd n uN = take (length uN) (reverse n) == reverse uN
 
 -- | add the workspace at the end of the list, if it isn't already in it
-addCont :: WorkspaceId -> ListStorage -> ListStorage
-addCont i l@(ListStorage xs) | i `elem` xs = l
-                             | otherwise   = ListStorage $ xs ++ [i]
+addCont :: Window -> ListStorage -> ListStorage
+addCont w l@(ListStorage ws) | w `elem` ws = l
+                             | otherwise   = ListStorage $ ws ++ [w]
+
+data BrowserMode = Normal | Private
 
 -- | Calls dmenuMap to grab the appropriate Window or program, and hands it off to action
 --   if found .
@@ -291,7 +295,7 @@ actionMenu action viewEmpty = windowMap >>= menuMapFunction >>= flip whenJust id
 runOrRaise :: X ()
 runOrRaise = actionMenu (windows . W.focusWindow) True
 
-runOrShift :: X()
+runOrShift :: X ()
 runOrShift = actionMenu action False
   where action w = do
           idx <- W.currentTag <$> gets windowset
