@@ -263,17 +263,13 @@ addCont :: Window -> ListStorage -> ListStorage
 addCont w l@(ListStorage ws) | w `elem` ws = l
                              | otherwise   = ListStorage $ ws ++ [w]
 
-data BrowserMode = Normal | Private
-
 -- | open url in browser
-browser :: BrowserMode -> String -> String
-browser mode url = "firefox " ++ modeFlag mode ++ "\"" ++ urlWithSearch ++ "\""
+browser ::  String -> String
+browser url = "firefox -new-window \"" ++ urlWithSearch ++ "\""
   where
    urlWithSearch = if any (== '.') url && not (any (== ' ')  url)
                    then url
                    else "duckduckgo.com\\?q=" ++ replaceSpaces url
-   modeFlag Normal = "-new-window "
-   modeFlag Private = "-private-window "
 
 -- | Calls dmenuMap to grab the appropriate Window or program, and hands it off to action
 --   if found .
@@ -295,8 +291,8 @@ actionMenu action viewEmpty = do
                            defaultAction
   join (windowMap >>= menuMapFunction)
     where
-      defaultAction url = when (length url > 0) $ spawn $ browser Private url
-
+      defaultAction url = when (length url > 0) $ composeAll $ [ viewEmptyWorkspace | viewEmpty ]
+                                                               ++ [spawn $ browser url]
       -- | A map from window names to Windows, given a windowTitler function.
       windowMap :: X (M.Map String (X ()))
       windowMap = do
