@@ -71,8 +71,6 @@ main = xmonad
       , ((mod4Mask              , xK_y)      , spawn toggleMonitor)
       , ((mod4Mask              , xK_Return) , spawn        "termite")
       , ((mod4Mask .|. shiftMask, xK_Return) , spawnOnEmpty "termite")
-      , ((mod4Mask              , xK_b)      , spawn        "qutebrowser")
-      , ((mod4Mask .|. shiftMask, xK_b)      , spawnOnEmpty "qutebrowser")
       , ((mod4Mask              , xK_v)      , spawn        emacs)
       , ((mod4Mask .|. shiftMask, xK_v)      , spawnOnEmpty emacs)
       , ((mod4Mask              , xK_f)      , composeAll [ runOrShift
