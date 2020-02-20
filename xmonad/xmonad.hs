@@ -41,6 +41,8 @@ import           XMonad.Util.Stack
 import           XMonad.Actions.MessageFeedback
 import           Data.Maybe(fromMaybe)
 
+import           Bookmarks
+
 data LibNotifyUrgencyHook = LibNotifyUrgencyHook deriving (Read, Show)
 
 newtype ListStorage = ListStorage [Window] deriving Typeable
@@ -196,11 +198,9 @@ myLayout = Full ||| shrinked ||| tabbed
 programms :: [(String,String)] -- ^ (name in dmenu, executable)
 programms = [ ("firefox"            , "firefox")
             , ("anki"               , "anki")
-            , ("whatsApp"           , browser Normal "web.whatsapp.com")
             , ("signal"             , "signal-desktop")
             , ("mattermost-desktop" , "mattermost-desktop")
             , ("spotify"            , "spotify")
-            , ("netflix"            , browser Normal "netflix.com")
             , ("youtube"            , startTerm "youtube-viewer")
             , ("mu4e"               , emacs "mu4e")
             , ("elfeed"             , emacs "elfeed")
@@ -210,11 +210,8 @@ programms = [ ("firefox"            , "firefox")
             , ("tor"                , "tor-browser")
             , ("termite"            , "termite")
             , ("virtualBox"         , "VirtualBox")
-            , ("github"             , browser Normal "github.com")
-            , ("gitlab"             , browser Normal "gitlab.com")
-            , ("wikipedia"          , browser Private "wikipedia.de")
-            , ("dict"               , browser Private "dict.cc")
             ]
+            ++ map (second browser) bookmarks
   where
     startTerm s = "termite --title=" ++ s ++ " --exec=" ++ s
     emacs s = "emacsclient -c -e \"(" ++ s ++ ")\"" ++ maximizeEmacs
