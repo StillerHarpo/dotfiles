@@ -196,7 +196,7 @@ myLayout = Full ||| shrinked ||| tabbed
         -- tabbed   = G.group T.simpleTabbed $ Mirror $ Column 1
         tabbed   = G.group Full $ Mirror $ Column 1
 
--- | programms that can be start from dmenu
+-- | programms that can be started from rofi
 programms :: [(String,String)] -- ^ (name in dmenu, executable)
 programms = [ ("firefox"            , "firefox")
             , ("anki"               , "anki")
