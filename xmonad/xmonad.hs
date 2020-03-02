@@ -18,6 +18,7 @@ import           XMonad.Actions.CycleWS
 import           XMonad.Actions.FindEmptyWorkspace
 import           XMonad.Actions.PhysicalScreens
 import           XMonad.Actions.SpawnOn
+import           XMonad.Actions.UpdatePointer
 import           XMonad.Hooks.EwmhDesktops
 import           XMonad.Hooks.ManageHelpers
 import           XMonad.Hooks.SetWMName
@@ -58,6 +59,7 @@ main = xmonad
      , modMask         = mod4Mask
      , workspaces      = map show [1 .. 20 ]
      , layoutHook      = smartBorders $ noBorders myLayout
+     , logHook         = updatePointer (0.5, 0.5) (0, 0)
      , manageHook      = myManageHooks
      , startupHook     = setWMName "LG3D"
      , handleEventHook = handleEventHook def <+> fullscreenEventHook
