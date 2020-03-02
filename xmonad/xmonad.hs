@@ -55,7 +55,7 @@ main :: IO ()
 main = xmonad
      $ withUrgencyHook LibNotifyUrgencyHook
      $ ewmh def
-     { terminal        = "termite"
+     { terminal        = "alacritty"
      , modMask         = mod4Mask
      , workspaces      = map show [1 .. 20 ]
      , layoutHook      = smartBorders $ noBorders myLayout
@@ -72,8 +72,8 @@ main = xmonad
       , ((mod4Mask              , 0x63)      , clock)
       , ((mod4Mask              , xK_x)      , spawn toggleRedshift)
       , ((mod4Mask              , xK_y)      , spawn toggleMonitor)
-      , ((mod4Mask              , xK_Return) , spawn        "termite")
-      , ((mod4Mask .|. shiftMask, xK_Return) , spawnOnEmpty "termite")
+      , ((mod4Mask              , xK_Return) , spawn        "alacritty")
+      , ((mod4Mask .|. shiftMask, xK_Return) , spawnOnEmpty "alacritty")
       , ((mod4Mask              , xK_v)      , spawn        emacs)
       , ((mod4Mask .|. shiftMask, xK_v)      , spawnOnEmpty emacs)
       , ((mod4Mask              , xK_f)      , composeAll [ runOrShift
@@ -115,7 +115,7 @@ main = xmonad
       where
         spawnOnEmpty prog = composeAll [viewEmptyWorkspace, spawn prog, saveFocus]
         saveView i = composeAll [windows . W.greedyView $ show i , saveFocus]
-        listWindows = "termite -e ~/projects/python/listWindows/listWindows.py"
+        listWindows = "alacritty -e ~/projects/python/listWindows/listWindows.py"
         emacs = "emacsclient -c ~/Dokumente/init.org"
         dbus = "dbus-send --print-reply "
         dest = "--dest=org.mpris.MediaPlayer2.spotify "
@@ -210,12 +210,12 @@ programms = [ ("firefox"            , "firefox")
             , ("toxic"              , startTerm "toxic")
             , ("rtv"                , startTerm "rtv")
             , ("tor"                , "tor-browser")
-            , ("termite"            , "termite")
+            , ("alacritty"          , "alacritty")
             , ("virtualBox"         , "VirtualBox")
             ]
             ++ map (second browser) bookmarks
   where
-    startTerm s = "termite --title=" ++ s ++ " --exec=" ++ s
+    startTerm s = "alacritty --title=" ++ s ++ " --exec=" ++ s
     emacs s = "emacsclient -c -e \"(" ++ s ++ ")\"" ++ maximizeEmacs
     maximizeEmacs = " -e \"(spacemacs/toggle-maximize-buffer)\""
 
