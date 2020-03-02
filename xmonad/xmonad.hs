@@ -184,11 +184,12 @@ expandMasterGroups :: X ()
 expandMasterGroups = sendMessage $ G.ToEnclosing $ SomeMessage Expand
 
 myManageHooks = composeAll
-    [ isFullscreen --> doFullFloat
-    , manageSpawn <+> manageHook def
-    , className =? "mpv" --> doFullFloat
-    , className =? "feh" --> doFullFloat
+    [ manageSpawn <+> manageHook def
+    , doSink
     ]
+
+doSink :: ManageHook
+doSink = ask >>= \w -> liftX (reveal w) >> doF (W.sink w)
 
 myLayout = Full ||| shrinked ||| tabbed
   where shrinked = gaps [(L,300), (R,300)] Full
