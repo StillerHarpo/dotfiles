@@ -203,6 +203,7 @@ programms = [ ("firefox"            , "firefox")
             , ("signal"             , "signal-desktop")
             , ("mattermost-desktop" , "mattermost-desktop")
             , ("spotify"            , "spotify")
+            , ("steam"              , "steam")
             , ("youtube"            , startTerm "youtube-viewer")
             , ("mu4e"               , emacs "mu4e")
             , ("elfeed"             , emacs "elfeed")
@@ -215,7 +216,7 @@ programms = [ ("firefox"            , "firefox")
             ]
             ++ map (second browser) bookmarks
   where
-    startTerm s = "alacritty --title=" ++ s ++ " --exec=" ++ s
+    startTerm s = "alacritty -t \"" ++ s ++ "\" -e \"" ++ s ++ "\""
     emacs s = "emacsclient -c -e \"(" ++ s ++ ")\"" ++ maximizeEmacs
     maximizeEmacs = " -e \"(spacemacs/toggle-maximize-buffer)\""
 
