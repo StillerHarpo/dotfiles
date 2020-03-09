@@ -76,6 +76,7 @@ main = xmonad
       , ((mod4Mask .|. shiftMask, xK_Return) , spawnOnEmpty "alacritty")
       , ((mod4Mask              , xK_v)      , spawn        emacs)
       , ((mod4Mask .|. shiftMask, xK_v)      , spawnOnEmpty emacs)
+      , ((mod4Mask              , xK_n)      , spawn "networkmanager_dmenu")
       , ((mod4Mask              , xK_f)      , composeAll [ runOrShift
                                                           , saveFocus])
       , ((mod4Mask .|. shiftMask, xK_f)      , composeAll [runOrRaise
@@ -203,7 +204,6 @@ programms = [ ("firefox"            , "firefox")
             , ("signal"             , "signal-desktop")
             , ("mattermost-desktop" , "mattermost-desktop")
             , ("spotify"            , "spotify")
-            , ("steam"              , "steam")
             , ("youtube"            , startTerm "youtube-viewer")
             , ("mu4e"               , emacs "mu4e")
             , ("elfeed"             , emacs "elfeed")
