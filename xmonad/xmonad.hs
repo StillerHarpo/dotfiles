@@ -1,17 +1,21 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
+
+import Protolude
+import qualified Data.Text as T
+
 
 import           Control.Applicative
-import           Control.Arrow (second)
 import           Control.Concurrent
 import           Control.Monad (unless, void, join, when)
 import           Data.Default
-import           Data.List
-import           Data.List.Utils (replace)
+import           Data.List (last)
 import qualified Data.Map as M
 import           System.Directory
-import           System.IO
 import           System.Process
 import           XMonad
 import           XMonad.Actions.CycleWS
@@ -131,27 +135,28 @@ main = xmonad
 
 
 -- Key scripts --
-myDzenConfig :: Int -> String -> X ()
-myDzenConfig len = dzenConfig (timeout 1 >=> centered)
+myDzenConfig :: Int -> Text -> X ()
+myDzenConfig len = dzenConfig (timeout 1 >=> centered) . T.unpack
   where centered = onCurr (center len 66)
              >=> font "-adobe-helvetica-*-*-*-*-24-*-*-*-*-*-*-*"
              >=> addArgs ["-fg", "#10bb20"]
 
-clockString :: X String
-clockString = do
+clockText :: X Text
+clockText = do
   date <- runProcessWithInput "date" ["+%H:%M:%S%n%A, %d. %B %Y"] []
   battery <- io $ readFile "/sys/class/power_supply/BAT0/capacity"
-  pure . replace "\n" " " $ date ++ "     Battery: " ++ init battery ++ "%"
+  pure . T.replace "\n" " " $ T.pack date `T.append` "     Battery: " `T.append` T.init battery `T.append` "%"
 
 clock :: X ()
-clock = clockString >>= myDzenConfig 600
+clock = clockText >>= myDzenConfig 600
 
 mute :: X ()
 mute = script >> output >>= myDzenConfig 300
   where
     script = runProcessWithInput "pactl" [ "set-sink-mute", "@DEFAULT_SINK@", "toggle" ] ""
-    output = head . filter (isInfixOf "muted") . take 1000 . dropWhile (isInfixOf "*"). lines
-      <$> runProcessWithInput "pacmd" ["list-sinks"] ""
+    output = fromMaybe "command failed" .
+      head . filter (T.isInfixOf "Mute:") . dropWhile (T.isInfixOf "State: RUNNING"). T.lines . T.pack
+      <$> runProcessWithInput "pactl" ["list", "sinks"] ""
 
 
 data Direction = Plus | Minus
@@ -162,9 +167,11 @@ volume vol = script >> output >>= myDzenConfig 300
     script = runProcessWithInput "pactl" [ "set-sink-volume", "@DEFAULT_SINK@", volChar vol ++ "5%" ] ""
     volChar Plus = "+"
     volChar Minus = "-"
-    output = (!! 4) . words . head . filter (isInfixOf "volume")
-      . take 1000 . dropWhile (isInfixOf "*") . lines
-      <$> runProcessWithInput "pacmd" ["list-sinks"] ""
+    output = fromMaybe "command failed"
+           . ((`atMay` 4) <=< fmap T.words
+           . head . filter (T.isInfixOf "Volume:")
+           . dropWhile (T.isInfixOf "State: RUNNING") . T.lines . T.pack)
+           <$> runProcessWithInput "pactl" ["list", "sinks"] ""
 
 backlight :: Direction -> X ()
 backlight dir = void $ runProcessWithInput "light" [ dirOp dir, "10" ] ""
@@ -198,12 +205,13 @@ myLayout = Full ||| shrinked ||| tabbed
         tabbed   = G.group Full $ Mirror $ Column 1
 
 -- | programms that can be started from rofi
-programms :: [(String,String)] -- ^ (name in dmenu, executable)
+programms :: [(Text,Text)] -- ^ (name in dmenu, executable)
 programms = [ ("firefox"            , "firefox")
             , ("anki"               , "anki")
             , ("signal"             , "signal-desktop")
             , ("mattermost-desktop" , "mattermost-desktop")
             , ("spotify"            , "spotify")
+            , ("steam"              , "steam")
             , ("youtube"            , startTerm "youtube-viewer")
             , ("mu4e"               , emacs "mu4e")
             , ("elfeed"             , emacs "elfeed")
@@ -216,8 +224,10 @@ programms = [ ("firefox"            , "firefox")
             ]
             ++ map (second browser) bookmarks
   where
-    startTerm s = "alacritty -t \"" ++ s ++ "\" -e \"" ++ s ++ "\""
-    emacs s = "emacsclient -c -e \"(" ++ s ++ ")\"" ++ maximizeEmacs
+    startTerm s = "alacritty -t \"" `T.append` s `T.append` "\" -e \""
+                  `T.append` s `T.append` "\""
+    emacs s = "emacsclient -c -e \"(" `T.append` s `T.append` ")\""
+              `T.append` maximizeEmacs
     maximizeEmacs = " -e \"(spacemacs/toggle-maximize-buffer)\""
 
 -- | save the current window, so you can later come back with goToNotify
@@ -245,7 +255,7 @@ lastStorage (ListStorage xs) = last xs
 
 deleteN :: ListStorage -> ListStorage
 deleteN l@(ListStorage [x]) = l
-deleteN (ListStorage xs)    = ListStorage $ init xs
+deleteN (ListStorage xs)    = ListStorage $ initSafe xs
 
 -- | if a window triggers a urgency, save the workspace on which it is
 --   and show a notification
@@ -267,12 +277,12 @@ addCont w l@(ListStorage ws) | w `elem` ws = l
                              | otherwise   = ListStorage $ ws ++ [w]
 
 -- | open url in browser
-browser ::  String -> String
-browser url = "firefox -new-window \"" ++ urlWithSearch ++ "\""
+browser ::  Text -> Text
+browser url = "firefox -new-window \"" `T.append` urlWithSearch `T.append` "\""
   where
-   urlWithSearch = if any (== '.') url && not (any (== ' ')  url)
+   urlWithSearch = if T.any (== '.') url && not (T.any (== ' ')  url)
                    then url
-                   else "duckduckgo.com\\?q=" ++ replaceSpaces url
+                   else "duckduckgo.com\\?q=" `T.append` replaceSpaces url
 
 -- | Calls dmenuMap to grab the appropriate Window or program, and hands it off to action
 --   if found .
@@ -280,7 +290,7 @@ actionMenu :: (Window -> X()) -- ^ the action
            -> Bool -- ^ should the program be open on a new workspace
            -> X ()
 actionMenu action viewEmpty = do
-  time <- clockString
+  time <- clockText
   let menuMapFunction =
         menuMapArgsDefault "rofi"
                            [ "-dmenu"
@@ -290,14 +300,15 @@ actionMenu action viewEmpty = do
                            , "-theme"
                            , "gruvbox-dark"
                            , "-mesg"
-                           , time]
+                           , time
+                           , "-fullscreen"]
                            defaultAction
   join (windowMap >>= menuMapFunction)
     where
-      defaultAction url = when (length url > 0) $ composeAll $ [ viewEmptyWorkspace | viewEmpty ]
-                                                               ++ [spawn $ browser url]
+      defaultAction url = when (T.length url > 0) $ composeAll $ [ viewEmptyWorkspace | viewEmpty ]
+                                                               ++ [spawn . T.unpack $ browser url]
       -- | A map from window names to Windows, given a windowTitler function.
-      windowMap :: X (M.Map String (X ()))
+      windowMap :: X (M.Map Text (X ()))
       windowMap = do
         ws <- gets $ W.workspaces . windowset
         M.fromList . (++ openProgramms) . toAction . concat
@@ -309,7 +320,7 @@ actionMenu action viewEmpty = do
                                (\(name,prog)
                                  -> (name,
                                     composeAll ([viewEmptyWorkspace | viewEmpty]
-                                                ++ [spawn prog, saveFocus])))
+                                                ++ [spawn (T.unpack prog), saveFocus])))
                                programms
 
 runOrRaise :: X ()
@@ -326,11 +337,12 @@ runOrShift = actionMenu action False
 -- | Returns the window name as will be listed in dmenu.
 --   Tagged with the workspace ID, to guarantee uniqueness, and to let
 --   the user know where they going.
-decorateName :: WindowSpace -> Window -> X String
+decorateName :: WindowSpace -> Window -> X Text
 decorateName ws w = do
   name <-  resClass <$> withDisplay (\d -> io $ getClassHint d w)
   displayName <- show <$> getName w
-  return $ name ++ " - " ++ displayName ++ " [" ++ W.tag ws ++ "]"
+  return $ T.pack name `T.append` " - " `T.append` displayName
+           `T.append` " [" `T.append` T.pack (W.tag ws) `T.append` "]"
 
 
 -- | temporally deletes a window on a workspace
@@ -341,15 +353,15 @@ delWin n w s = case W.findTag w s of
     where go from = onWorkspace from (W.delete' w)
 
 -- | Like 'menuMapArgs' but also takes a default command
-menuMapArgsDefault :: MonadIO m => String -> [String]
-                   -> (String -> a)
-                   -> M.Map String a
+menuMapArgsDefault :: MonadIO m => Text -> [Text]
+                   -> (Text -> a)
+                   -> M.Map Text a
                    -> m a
 menuMapArgsDefault menuCmd args def selectionMap = do
-  selection <- menuFunction (M.keys selectionMap)
+  selection <- menuFunction . map T.unpack $ M.keys selectionMap
   return $ fromMaybe (def selection) $ M.lookup selection selectionMap
       where
-        menuFunction = menuArgs menuCmd args
+        menuFunction = fmap T.pack . menuArgs (T.unpack menuCmd) (map T.unpack args)
 
 -- | is not exported from Stackset
 onWorkspace :: (Eq i, Eq s) => i -> (W.StackSet i l a s sd -> W.StackSet i l a s sd)
@@ -370,10 +382,7 @@ alt2 :: G.GroupsMessage -> X () -> X ()
 alt2 m x = do b <- send m
               unless b x
 
-replaceSpaces :: String -> String
-replaceSpaces ""       = ""
-replaceSpaces (' ':ss) = '+':removeLeading ss
-  where
-    removeLeading (' ':ss) = removeLeading ss
-    removeLeading (s  :ss) = s:replaceSpaces ss
-replaceSpaces (s  :ss) = s:replaceSpaces ss
+replaceSpaces :: Text -> Text
+replaceSpaces = T.map (\case
+                          ' ' -> '+'
+                          c -> c) . T.strip
