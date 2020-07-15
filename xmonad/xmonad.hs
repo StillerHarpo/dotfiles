@@ -252,7 +252,7 @@ goToNotify :: X()
 goToNotify =  do
        w <- lastStorage <$> XS.get
        XS.modify deleteN
-       windows $ W.focusWindow w
+       windows $ greedyFocusWindow w
 
 lastStorage :: ListStorage -> Window
 lastStorage (ListStorage xs) = last xs
@@ -328,7 +328,7 @@ actionMenu action viewEmpty = do
                                programms
 
 runOrRaise :: X ()
-runOrRaise = actionMenu (windows . W.focusWindow) True
+runOrRaise = actionMenu (windows . greedyFocusWindow) True
 
 runOrShift :: X ()
 runOrShift = actionMenu action False
@@ -390,3 +390,9 @@ replaceSpaces :: Text -> Text
 replaceSpaces = T.map (\case
                           ' ' -> '+'
                           c -> c) . T.strip
+
+greedyFocusWindow :: (Eq s, Eq a, Eq i) => a -> W.StackSet i l a s sd -> W.StackSet i l a s sd
+greedyFocusWindow w s | Just w == W.peek s = s
+                      | otherwise        = fromMaybe s $ do
+                          n <- W.findTag w s
+                          return $ until ((Just w ==) . W.peek) W.focusUp (W.greedyView n s)
