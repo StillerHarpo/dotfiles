@@ -1,2 +1,8 @@
 location.el
 xmonad/TAGS
+**/.direnv/
+**/*.swo
+**/*.local
+**/*.local~
+**/dist-newstyle/
+**/dist/
