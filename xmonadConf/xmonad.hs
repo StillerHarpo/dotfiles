@@ -150,7 +150,7 @@ clockText = do
   pure . T.replace "\n" " " $ T.pack date `T.append` "     Battery: " `T.append` T.init battery `T.append` "%"
 
 clock :: X ()
-clock = clockText >>= myDzenConfig 600
+clock = clockText >>= myDzenConfig 700
 
 mute :: X ()
 mute = script >> output >>= myDzenConfig 300
