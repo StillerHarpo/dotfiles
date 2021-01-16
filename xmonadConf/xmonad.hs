@@ -9,22 +9,15 @@ import Protolude
 import qualified Data.Text as T
 
 
-import           Control.Applicative
-import           Control.Concurrent
-import           Control.Monad (unless, void, join, when)
 import           Data.Default
 import           Data.List (last)
 import qualified Data.Map as M
-import           System.Directory
-import           System.Process
 import           XMonad
 import           XMonad.Actions.CycleWS
 import           XMonad.Actions.FindEmptyWorkspace
-import           XMonad.Actions.PhysicalScreens
 import           XMonad.Actions.SpawnOn
 import           XMonad.Actions.UpdatePointer
 import           XMonad.Hooks.EwmhDesktops
-import           XMonad.Hooks.ManageHelpers
 import           XMonad.Hooks.SetWMName
 import           XMonad.Hooks.UrgencyHook
 import           XMonad.Layout.Column
@@ -32,9 +25,6 @@ import           XMonad.Layout.Gaps
 import qualified XMonad.Layout.Groups as G
 import qualified XMonad.Layout.Groups.Helpers as GH
 import           XMonad.Layout.NoBorders
-import qualified XMonad.Layout.Tabbed as T
-import           XMonad.Prompt hiding (font)
-import           XMonad.Prompt.RunOrRaise
 import qualified XMonad.StackSet as W
 import           XMonad.Util.Dmenu (menuArgs)
 import           XMonad.Util.Dzen
@@ -44,7 +34,6 @@ import           XMonad.Util.NamedWindows
 import           XMonad.Util.Run
 import           XMonad.Util.Stack
 import           XMonad.Actions.MessageFeedback
-import           Data.Maybe(fromMaybe)
 
 import           Bookmarks
 
@@ -125,7 +114,6 @@ main = xmonad
       where
         spawnOnEmpty prog = composeAll [viewEmptyWorkspace, spawn prog, saveFocus]
         saveView i = composeAll [windows . W.greedyView $ show i , saveFocus]
-        listWindows = termCommand <> "-e ~/projects/python/listWindows/listWindows.py"
         emacs = "emacsclient -c ~/Dokumente/init.org"
         dbus = "dbus-send --print-reply "
         dest = "--dest=org.mpris.MediaPlayer2.spotify "
@@ -261,7 +249,7 @@ lastStorage :: ListStorage -> Window
 lastStorage (ListStorage xs) = last xs
 
 deleteN :: ListStorage -> ListStorage
-deleteN l@(ListStorage [x]) = l
+deleteN l@(ListStorage [_]) = l
 deleteN (ListStorage xs)    = ListStorage $ initSafe xs
 
 -- | if a window triggers a urgency, save the workspace on which it is
@@ -386,7 +374,7 @@ alt :: G.ModifySpec -> (WindowSet -> WindowSet) -> X ()
 alt f g = alt2 (G.Modify f) $ windows g
 
 alt2 :: G.GroupsMessage -> X () -> X ()
-alt2 m x = do b <- send m
+alt2 m x = do b <- sendMessageB m
               unless b x
 
 replaceSpaces :: Text -> Text
