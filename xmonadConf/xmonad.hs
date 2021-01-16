@@ -55,11 +55,14 @@ newtype ListStorage = ListStorage [Window] deriving Typeable
 instance ExtensionClass ListStorage where
   initialValue = ListStorage []
 
+termCommand :: IsString a => a
+termCommand = "alacritty --live-config-reload"
+
 main :: IO ()
 main = xmonad
      $ withUrgencyHook LibNotifyUrgencyHook
      $ ewmh def
-     { terminal        = "alacritty"
+     { terminal        = termCommand
      , modMask         = mod4Mask
      , workspaces      = map show [1 .. 20 ]
      , layoutHook      = smartBorders $ noBorders myLayout
@@ -76,8 +79,8 @@ main = xmonad
       , ((mod4Mask              , 0x63)      , clock)
       , ((mod4Mask              , xK_x)      , spawn toggleRedshift)
       , ((mod4Mask              , xK_y)      , spawn toggleMonitor)
-      , ((mod4Mask              , xK_Return) , spawn        "alacritty")
-      , ((mod4Mask .|. shiftMask, xK_Return) , spawnOnEmpty "alacritty")
+      , ((mod4Mask              , xK_Return) , spawn        termCommand)
+      , ((mod4Mask .|. shiftMask, xK_Return) , spawnOnEmpty termCommand)
       , ((mod4Mask              , xK_v)      , spawn        emacs)
       , ((mod4Mask .|. shiftMask, xK_v)      , spawnOnEmpty emacs)
       , ((mod4Mask              , xK_n)      , spawn "networkmanager_dmenu")
@@ -122,7 +125,7 @@ main = xmonad
       where
         spawnOnEmpty prog = composeAll [viewEmptyWorkspace, spawn prog, saveFocus]
         saveView i = composeAll [windows . W.greedyView $ show i , saveFocus]
-        listWindows = "alacritty -e ~/projects/python/listWindows/listWindows.py"
+        listWindows = termCommand <> "-e ~/projects/python/listWindows/listWindows.py"
         emacs = "emacsclient -c ~/Dokumente/init.org"
         dbus = "dbus-send --print-reply "
         dest = "--dest=org.mpris.MediaPlayer2.spotify "
@@ -147,7 +150,7 @@ clockText :: X Text
 clockText = do
   date <- runProcessWithInput "date" ["+%H:%M:%S%n%A, %d. %B %Y"] []
   battery <- io $ readFile "/sys/class/power_supply/BAT0/capacity"
-  pure . T.replace "\n" " " $ T.pack date `T.append` "     Battery: " `T.append` T.init battery `T.append` "%"
+  pure . T.replace "\n" " " $ T.pack date <> "     Battery: " <> T.init battery <> "%"
 
 clock :: X ()
 clock = clockText >>= myDzenConfig 700
@@ -222,16 +225,16 @@ programms = [ ("firefox"            , "firefox")
             , ("toxic"              , startTerm "toxic")
             , ("rtv"                , startTerm "rtv")
             , ("tor"                , "tor-browser")
-            , ("alacritty"          , "alacritty")
+            , ("alacritty"          , termCommand)
             , ("slack"              , "slack")
             , ("virtualBox"         , "VirtualBox")
             ]
             ++ map (second browser) bookmarks
   where
-    startTerm s = "alacritty -t \"" `T.append` s `T.append` "\" -e \""
-                  `T.append` s `T.append` "\""
-    emacs s = "emacsclient -c -e \"(" `T.append` s `T.append` ")\""
-              `T.append` maximizeEmacs
+    startTerm s = termCommand <> " -t \"" <> s <> "\" -e \""
+                  <> s <> "\""
+    emacs s = "emacsclient -c -e \"(" <> s <> ")\""
+              <> maximizeEmacs
     maximizeEmacs = " -e \"(spacemacs/toggle-maximize-buffer)\""
 
 -- | save the current window, so you can later come back with goToNotify
@@ -282,11 +285,11 @@ addCont w l@(ListStorage ws) | w `elem` ws = l
 
 -- | open url in browser
 browser ::  Text -> Text
-browser url = "firefox -new-window \"" `T.append` urlWithSearch `T.append` "\""
+browser url = "firefox -new-window \"" <> urlWithSearch <> "\""
   where
    urlWithSearch = if T.any (== '.') url && not (T.any (== ' ')  url)
                    then url
-                   else "duckduckgo.com\\?q=" `T.append` replaceSpaces url
+                   else "duckduckgo.com\\?q=" <> replaceSpaces url
 
 -- | Calls dmenuMap to grab the appropriate Window or program, and hands it off to action
 --   if found .
@@ -345,8 +348,8 @@ decorateName :: WindowSpace -> Window -> X Text
 decorateName ws w = do
   name <-  resClass <$> withDisplay (\d -> io $ getClassHint d w)
   displayName <- show <$> getName w
-  return $ T.pack name `T.append` " - " `T.append` displayName
-           `T.append` " [" `T.append` T.pack (W.tag ws) `T.append` "]"
+  return $ T.pack name <> " - " <> displayName
+           <> " [" <> T.pack (W.tag ws) <> "]"
 
 
 -- | temporally deletes a window on a workspace
