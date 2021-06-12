@@ -1,5 +1,8 @@
 location.el
+elfeed.org
 xmonad/TAGS
+xmonadConf/TAGS
+xmonadConf/lib/Bookmarks.hs
 **/.direnv/
 **/*.swo
 **/*.local
