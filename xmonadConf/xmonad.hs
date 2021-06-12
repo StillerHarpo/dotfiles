@@ -45,7 +45,7 @@ instance ExtensionClass ListStorage where
   initialValue = ListStorage []
 
 termCommand :: IsString a => a
-termCommand = "alacritty --live-config-reload"
+termCommand = "alacritty"
 
 main :: IO ()
 main = xmonad
