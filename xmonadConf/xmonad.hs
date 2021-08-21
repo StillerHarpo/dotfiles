@@ -211,6 +211,7 @@ programms = [ ("firefox"            , "firefox")
             , ("alacritty"          , termCommand)
             , ("pavucontrol"        , "pavucontrol")
             , ("arandr"             , "arandr")
+            , ("home-assistent"     , "chromium --new-window \"http://192.168.178.26:8123\"/")
             ]
             ++ map (second browser) bookmarks
   where
