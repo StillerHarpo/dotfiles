@@ -363,7 +363,7 @@ insertUp w = alt (onFocused $ insertUpZ w) (W.insertUp w)
 
 -- | Group helpers
 onFocused :: (Zipper Window -> Zipper Window) -> G.ModifySpec
-onFocused f _ gs = onFocusedZ (G.onZipper f) gs
+onFocused f _ = onFocusedZ (G.onZipper f)
 
 alt :: G.ModifySpec -> (WindowSet -> WindowSet) -> X ()
 alt f g = alt2 (G.Modify f) $ windows g
@@ -381,4 +381,5 @@ greedyFocusWindow :: (Eq s, Eq a, Eq i) => a -> W.StackSet i l a s sd -> W.Stack
 greedyFocusWindow w s | Just w == W.peek s = s
                       | otherwise        = fromMaybe s $ do
                           n <- W.findTag w s
+
                           return $ until ((Just w ==) . W.peek) W.focusUp (W.greedyView n s)
