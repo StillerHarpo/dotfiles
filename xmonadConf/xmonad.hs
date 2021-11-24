@@ -59,8 +59,9 @@ main = xmonad
      , layoutHook      = smartBorders $ noBorders myLayout
      , logHook         = updatePointer (0.5, 0.5) (0, 0)
      , manageHook      = myManageHooks
-     , startupHook     = setWMName "LG3D" >> spawn "feh --bg-scale ~/black.png"
-                                          >> spawn "firefox"
+     , startupHook     = do
+         setWMName "LG3D"
+         spawn "feh --bg-scale ~/black.png"
      , handleEventHook = handleEventHook def <+> fullscreenEventHook
      }
      `additionalKeys`
