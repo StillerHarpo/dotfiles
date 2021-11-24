@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RankNTypes #-}
@@ -5,6 +6,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase #-}
 
+{-# LANGUAGE ViewPatterns #-}
 import Protolude
 import qualified Data.Text as T
 
@@ -144,27 +146,27 @@ clock :: X ()
 clock = clockText >>= myDzenConfig 700
 
 mute :: X ()
-mute = script >> output >>= myDzenConfig 300
+mute = script >> liftIO output >>= myDzenConfig 300
   where
-    script = runProcessWithInput "pactl" [ "set-sink-mute", "@DEFAULT_SINK@", "toggle" ] ""
-    output = fromMaybe "command failed" .
-      head . filter (T.isInfixOf "Mute:") . dropWhile (T.isInfixOf "State: RUNNING"). T.lines . T.pack
-      <$> runProcessWithInput "pactl" ["list", "sinks"] ""
-
+    script = runProcessWithInput "pamixer" ["-t"] ""
+    output =
+      (\(T.pack -> res) -> if T.isInfixOf "true" res then "Muted" else "Unmuted")
+        <$> catch @IOException
+          (runProcessWithInput "pamixer" ["--get-mute"] "")
+          (const $ pure "")
 
 data Direction = Plus | Minus
 
 volume :: Direction -> X ()
-volume vol = script >> output >>= myDzenConfig 300
+volume vol = script >> T.pack <$> liftIO output >>= myDzenConfig 300
   where
-    script = runProcessWithInput "pactl" [ "set-sink-volume", "@DEFAULT_SINK@", volChar vol ++ "5%" ] ""
-    volChar Plus = "+"
-    volChar Minus = "-"
-    output = fromMaybe "command failed"
-           . ((`atMay` 4) <=< fmap T.words
-           . head . filter (T.isInfixOf "Volume:")
-           . dropWhile (T.isInfixOf "State: RUNNING") . T.lines . T.pack)
-           <$> runProcessWithInput "pactl" ["list", "sinks"] ""
+    script = runProcessWithInput "pamixer" [volChar vol ++ "5"] ""
+    volChar Plus = "-i"
+    volChar Minus = "-d"
+    output =
+      catch @IOException
+        (runProcessWithInput "pamixer" ["--get-volume", "sinks"] "")
+        (const $ pure "Command failed")
 
 backlight :: Direction -> X ()
 backlight dir = void $ runProcessWithInput "light" [ dirOp dir, "10" ] ""
