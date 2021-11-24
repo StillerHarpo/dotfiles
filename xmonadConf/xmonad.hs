@@ -76,8 +76,8 @@ main = xmonad
       , ((mod4Mask              , xK_v)      , spawn        emacs)
       , ((mod4Mask .|. shiftMask, xK_v)      , spawnOnEmpty emacs)
       , ((mod4Mask              , xK_n)      , spawn "networkmanager_dmenu")
-      , ((mod4Mask              , xK_m)      , spawn "slock systemctl suspend -i")
-      , ((mod4Mask              , xK_u)      , spawn "slock")
+      , ((mod4Mask              , xK_m)      , spawn "sudo slock systemctl suspend -i")
+      , ((mod4Mask              , xK_u)      , spawn "sudo slock")
       , ((mod4Mask              , xK_f)      , composeAll [ runOrShift
                                                           , saveFocus])
       , ((mod4Mask .|. shiftMask, xK_f)      , composeAll [runOrRaise
